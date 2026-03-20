@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>민준이의 생일파티에 초대합니다!</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 귀엽고 감성적인 Jua 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            /* 땡땡이 대신 은은하고 감성적인 파스텔 솜사탕 그라데이션 */
+            background: linear-gradient(135deg, #E0F2FE 0%, #FDF4FF 50%, #FFFBEB 100%);
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* 둥둥 애니메이션 */
+        .float-1 { animation: float 3.5s ease-in-out infinite; }
+        .float-2 { animation: float 4.5s ease-in-out infinite reverse; }
+        .float-3 { animation: float 3s ease-in-out infinite; }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        /* 부드러운 등장 애니메이션 */
+        .pop-in {
+            animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform: scale(0.9);
+            opacity: 0;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 감성적이고 부드러운 그림자 (솜사탕 그림자) */
+        .aesthetic-shadow {
+            box-shadow: 0 20px 40px rgba(133, 189, 235, 0.15);
+        }
+        
+        .aesthetic-button {
+            box-shadow: 0 8px 20px rgba(125, 211, 252, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .aesthetic-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(125, 211, 252, 0.5);
+        }
+
+        .aesthetic-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 4px 10px rgba(125, 211, 252, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <!-- 장식용 배경 이모지들 (투명도를 주어 은은하게) -->
+    <div class="absolute top-10 left-5 text-5xl float-1 drop-shadow-sm opacity-80 z-0">☁️</div>
+    <div class="absolute top-24 right-8 text-6xl float-2 drop-shadow-sm opacity-70 z-0">☀️</div>
+    <div class="absolute bottom-12 left-10 text-5xl float-3 drop-shadow-sm opacity-80 z-0">🏖️</div>
+    <div class="absolute bottom-24 right-6 text-5xl float-1 drop-shadow-sm opacity-80 z-0">🫧</div>
+
+    <!-- 초대장 메인 카드 -->
+    <div class="pop-in max-w-md w-full bg-white/95 backdrop-blur-sm rounded-[2.5rem] aesthetic-shadow p-8 sm:p-10 relative z-10 text-center border border-white">
+        
+        <!-- 귀여운 프로필 영역 -->
+        <div class="w-24 h-24 sm:w-28 sm:h-28 mx-auto bg-sky-100 rounded-full border-4 border-white flex items-center justify-center text-5xl sm:text-6xl aesthetic-shadow mb-6 float-1 relative">
+            👦🏻
+            <div class="absolute -bottom-1 -right-1 text-3xl drop-shadow-sm">🍉</div>
+        </div>
+        
+        <h1 class="text-3xl sm:text-4xl text-sky-500 mb-2 tracking-wide">민준이의 생일파티!</h1>
+        <p class="text-base text-gray-400 mb-8">여름엔 역시 물놀이와 수박이지 💦</p>
+        
+        <!-- 하이라이트 문구 박스 -->
+        <div class="bg-sky-50/80 rounded-3xl p-5 mb-8 transform -rotate-1 aesthetic-shadow border border-sky-100/50">
+            <p class="text-xl sm:text-2xl text-sky-700 leading-relaxed">
+                "민준이 보러<br>
+                <span class="text-2xl text-pink-400 block mt-1 tracking-wide">메가또리아</span>
+                놀러오세요~"
+            </p>
+        </div>
+
+        <!-- 파티 정보 박스 -->
+        <div class="bg-amber-50/60 rounded-3xl p-6 text-left mb-8 space-y-5 aesthetic-shadow border border-amber-100/50">
+            <div class="flex items-center gap-4">
+                <div class="w-11 h-11 bg-white rounded-full flex items-center justify-center text-xl shadow-sm text-amber-500">
+                    📅
+                </div>
+                <div>
+                    <span class="block text-sm text-amber-500/80 mb-0.5">언제 만날까?</span>
+                    <span class="text-lg text-gray-700">2026년 7월 16일</span>
+                </div>
+            </div>
+            
+            <div class="w-full h-px bg-amber-200/50"></div>
+            
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 bg-white rounded-full flex items-center justify-center text-xl shadow-sm text-amber-500">
+                        📍
+                    </div>
+                    <div>
+                        <span class="block text-sm text-amber-500/80 mb-0.5">어디로 갈까?</span>
+                        <span class="text-lg text-gray-700">래미안안양메가트리아</span>
+                    </div>
+                </div>
+                <div class="ml-14 pl-1 text-gray-500 text-sm tracking-wide bg-white/50 inline-block py-1.5 px-3 rounded-xl">
+                    경기도 안양시 만안구 안양천서로 177
+                </div>
+            </div>
+        </div>
+
+        <!-- 주소 복사 버튼 -->
+        <button onclick="copyAddress()" class="w-full bg-gradient-to-r from-sky-300 to-blue-300 text-white text-xl py-4 rounded-2xl aesthetic-button flex justify-center items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 opacity-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            주소 복사할래! 💌
+        </button>
+    </div>
+
+    <!-- 알림 메시지 (토스트) - 몽글몽글한 말풍선 -->
+    <div id="toast" class="fixed bottom-12 left-1/2 transform -translate-x-1/2 translate-y-[150%] opacity-0 transition-all duration-400 ease-out bg-sky-50 text-sky-600 border border-sky-100 px-7 py-3.5 rounded-full z-50 pointer-events-none text-base whitespace-nowrap aesthetic-shadow">
+        ✨ 주소가 복사되었어! 이따 봐! ✨
+    </div>
+
+    <!-- 기능 스크립트 -->
+    <script>
+        function copyAddress() {
+            const addressText = "경기도 안양시 만안구 안양천서로 177 래미안안양메가트리아";
+            
+            const textArea = document.createElement("textarea");
+            textArea.value = addressText;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('복사 실패:', err);
+                alert("주소 복사에 실패했어 😢 직접 복사해줘!");
+            }
+
+            textArea.remove();
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            
+            toast.classList.remove('translate-y-[150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[150%]', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
