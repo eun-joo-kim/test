@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>생일 초대장</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #ff8fab;
+            --secondary-color: #fb6f92;
+            --background-color: #ffe5ec;
+            --text-color: #5c4d4d;
+        }
+
+        body {
+            font-family: 'Jua', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-color);
+            overflow-x: hidden;
+        }
+
+        .invitation-card {
+            background-color: white;
+            width: 100%;
+            max-width: 400px;
+            min-height: 100vh;
+            padding: 40px 20px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
+            border-radius: 0;
+        }
+
+        @media (min-width: 480px) {
+            .invitation-card {
+                min-height: auto;
+                border-radius: 30px;
+                margin: 20px;
+            }
+        }
+
+        .header-img {
+            width: 120px;
+            height: 120px;
+            background-color: #ffc2d1;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite ease-in-out;
+            box-shadow: 0 5px 15px rgba(255, 143, 171, 0.4);
+            z-index: 1;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            font-size: 38px;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+            z-index: 1;
+        }
+
+        .subtitle {
+            font-size: 22px;
+            color: #888;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        .countdown {
+            margin: 10px 0 30px 0;
+            padding: 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 15px;
+            font-weight: bold;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(255, 143, 171, 0.4);
+            z-index: 1;
+            width: 100%;
+            box-sizing: border-box;
+            animation: popIn 0.5s ease-out;
+        }
+
+        .time-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+        }
+
+        .time-val { font-size: 30px; line-height: 1; }
+        .time-label { font-size: 14px; opacity: 0.9; margin-top: 5px; }
+        
+        .time-sep {
+            font-size: 24px;
+            margin-top: -15px;
+            font-weight: normal;
+        }
+
+        .details-box {
+            background-color: #fff0f3;
+            border: 3px dashed var(--primary-color);
+            border-radius: 20px;
+            padding: 25px 20px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .detail-item {
+            margin: 15px 0;
+            font-size: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .detail-icon {
+            font-size: 30px;
+        }
+
+        .highlight {
+            color: var(--secondary-color);
+            background-color: rgba(255, 143, 171, 0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .warning-text {
+            color: #ff4d6d;
+            font-size: 22px;
+            margin-top: 30px;
+            font-weight: bold;
+            animation: shake 3s infinite;
+            z-index: 1;
+        }
+
+        .map-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 24px;
+            font-family: inherit;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(251, 111, 146, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            z-index: 1;
+        }
+
+        .map-btn:hover {
+            background-color: #ff4d6d;
+            transform: scale(1.05);
+        }
+
+        /* Floating shapes background */
+        .shape {
+            position: absolute;
+            z-index: 0;
+            opacity: 0.6;
+        }
+
+        .shape1 { top: 5%; left: 10%; font-size: 40px; animation: float 4s infinite alternate; }
+        .shape2 { top: 20%; right: 10%; font-size: 45px; animation: float 5s infinite alternate-reverse; }
+        .shape3 { bottom: 15%; left: 15%; font-size: 35px; animation: float 3s infinite alternate; }
+        .shape4 { bottom: 30%; right: 5%; font-size: 30px; animation: float 6s infinite alternate-reverse; }
+        .shape5 { top: 40%; left: 5%; font-size: 25px; animation: float 4.5s infinite alternate; }
+        .shape6 { bottom: 45%; right: 15%; font-size: 38px; animation: float 5.5s infinite alternate-reverse; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-20px) rotate(15deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+            20%, 40%, 60%, 80% { transform: translateX(2px); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="invitation-card">
+        <div class="shape shape1">✨</div>
+        <div class="shape shape2">🎈</div>
+        <div class="shape shape3">🎁</div>
+        <div class="shape shape4">💖</div>
+        <div class="shape shape5">🎉</div>
+        <div class="shape shape6">🧸</div>
+
+        <div class="header-img">🎂</div>
+        
+        <h1>생일 초대장</h1>
+        <div class="subtitle">저의 생일 파티에 오실래요?</div>
+
+        <div id="countdown" class="countdown">
+            <!-- Countdown will be injected here via JS -->
+            <div class="time-box"><span class="time-val">-</span><span class="time-label">일</span></div><span class="time-sep">:</span>
+            <div class="time-box"><span class="time-val">--</span><span class="time-label">시간</span></div><span class="time-sep">:</span>
+            <div class="time-box"><span class="time-val">--</span><span class="time-label">분</span></div><span class="time-sep">:</span>
+            <div class="time-box"><span class="time-val">--</span><span class="time-label">초</span></div>
+        </div>
+
+        <div class="details-box">
+            <div class="detail-item">
+                <span class="detail-icon">📅</span>
+                <span class="highlight">2026년 10월 28일</span>
+            </div>
+            <div class="detail-item">
+                <span class="detail-icon">📍</span>
+                <span class="highlight">모두의연구소 강남캠퍼스</span>
+            </div>
+        </div>
+
+        <a href="https://map.naver.com/p/search/%EB%AA%A8%EB%91%90%EC%9D%98%EC%97%B0%EA%B5%AC%EC%86%8C%20%EA%B0%95%EB%82%A8%EC%BA%A0%ED%8D%BC%EC%8A%A4" target="_blank" class="map-btn">
+            지도 보기 🗺️
+        </a>
+
+        <div class="warning-text">※ 올 때까지 집 안 감! ※</div>
+    </div>
+
+    <script>
+        function updateCountdown() {
+            // Target Date: 2026-10-28 00:00:00 KST
+            const dest = new Date("2026-10-28T00:00:00+09:00").getTime();
+            const now = new Date().getTime();
+            const diff = dest - now;
+
+            const countdownEl = document.getElementById("countdown");
+
+            if (diff <= 0) {
+                countdownEl.innerHTML = "<div class='time-box'><span class='time-val'>🎉</span><span class='time-label'>파티가 시작되었습니다!</span></div>";
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            countdownEl.innerHTML = `
+                <div class="time-box"><span class="time-val">${days}</span><span class="time-label">일</span></div><span class="time-sep">:</span>
+                <div class="time-box"><span class="time-val">${hours.toString().padStart(2, '0')}</span><span class="time-label">시간</span></div><span class="time-sep">:</span>
+                <div class="time-box"><span class="time-val">${minutes.toString().padStart(2, '0')}</span><span class="time-label">분</span></div><span class="time-sep">:</span>
+                <div class="time-box"><span class="time-val">${seconds.toString().padStart(2, '0')}</span><span class="time-label">초</span></div>
+            `;
+        }
+
+        setInterval(updateCountdown, 1000);
+        updateCountdown(); // Call immediately on load
+    </script>
+</body>
+</html>
