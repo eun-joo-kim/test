@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MINJUN'S 36TH BIRTHDAY</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Gowun+Dodum&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-paper: #EFEBDF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            /* Paper texture background */
+            background-color: var(--bg-paper);
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+            font-family: 'Gowun Dodum', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            color: #1a1a1a;
+        }
+
+        .collage-container {
+            width: 100%;
+            max-width: 420px;
+            min-height: 100vh;
+            position: relative;
+            padding: 2rem 1.5rem 6rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Garland */
+        .garland {
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,0 Q10,20 20,0 Q30,20 40,0 Q50,20 60,0 Q70,20 80,0 Q90,20 100,0' fill='none' stroke='%23333' stroke-width='0.5'/%3E%3Cpolygon points='0,0 10,15 20,0' fill='%23B25042'/%3E%3Cpolygon points='20,0 30,15 40,0' fill='%23E1B983'/%3E%3Cpolygon points='40,0 50,15 60,0' fill='%231B4552'/%3E%3Cpolygon points='60,0 70,15 80,0' fill='%23E2A29B'/%3E%3Cpolygon points='80,0 90,15 100,0' fill='%23D48B30'/%3E%3C/svg%3E");
+            background-size: 200px 40px;
+            background-repeat: repeat-x;
+            z-index: 10;
+        }
+
+        /* Ransom Note Title */
+        .ransom-title {
+            margin-top: 3.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            z-index: 20;
+            margin-bottom: 2rem;
+            transform: scale(0.9);
+        }
+        
+        .ransom-word {
+            display: flex;
+            gap: 2px;
+        }
+
+        .letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            color: #111;
+            font-family: 'Anton', sans-serif;
+            font-size: 2rem;
+            width: 36px;
+            height: 42px;
+            text-transform: uppercase;
+            box-shadow: 2px 3px 6px rgba(0,0,0,0.25);
+            letter-spacing: -1px;
+        }
+        
+        /* Randomized ransom letters */
+        .letter:nth-child(even) { background: #e9e9e9; transform: rotate(5deg) translateY(-2px); }
+        .letter:nth-child(odd) { transform: rotate(-4deg) translateY(2px); font-family: 'Courier New', monospace; font-weight: bold; }
+        .letter:nth-child(3n) { background: #dcdcdc; color: #000; transform: rotate(-2deg); font-family: 'Anton', sans-serif; }
+        .letter:nth-child(4n) { background: #fdfdfd; transform: rotate(3deg); }
+
+        /* Foil Balloons 36 */
+        .foil-number-container {
+            position: absolute;
+            top: 25%;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5%;
+            pointer-events: none;
+            z-index: 5; /* Behind the photo */
+        }
+
+        .foil-number {
+            font-family: 'Anton', sans-serif;
+            font-size: 14rem;
+            line-height: 0.8;
+            background: linear-gradient(135deg, #f5f5f5 0%, #c4c4c4 22%, #ffffff 45%, #888888 50%, #e0e0e0 78%, #cfcfcf 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(4px 8px 6px rgba(0,0,0,0.3)) drop-shadow(-2px -2px 1px rgba(255,255,255,0.8));
+            transform: rotate(-5deg);
+        }
+
+        .foil-num-6 {
+            transform: rotate(8deg);
+            margin-top: 2rem;
+        }
+
+        /* Shiny Balloons SVG */
+        .balloon {
+            position: absolute;
+            z-index: 6;
+            filter: drop-shadow(3px 8px 6px rgba(0,0,0,0.25));
+            animation: float 5s ease-in-out infinite alternate;
+        }
+        
+        .balloon-red {
+            top: 18%;
+            left: 2%;
+            transform: rotate(-10deg);
+        }
+
+        .balloon-blue {
+            top: 12%;
+            right: 2%;
+            transform: rotate(15deg);
+            animation-delay: 1.5s;
+        }
+
+        .blue-star {
+            position: absolute;
+            top: 12%;
+            left: 10%;
+            color: #0d47a1;
+            font-size: 3rem;
+            transform: rotate(-20deg);
+            z-index: 4;
+            filter: drop-shadow(2px 2px 0px rgba(0,0,0,0.2));
+            animation: float 4s ease-in-out infinite alternate-reverse;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-15px) rotate(8deg); }
+        }
+
+        /* Center Setup */
+        .center-stage {
+            position: relative;
+            z-index: 25;
+            margin-top: -10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Retro Cutout Photo */
+        .photo-wrap {
+            position: relative;
+            transform: rotate(-2deg);
+        }
+
+        .photo-cutout {
+            width: 200px;
+            height: 250px;
+            background-color: #fce7cf;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 250"><defs><radialGradient id="bg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="%23ffeb88"/><stop offset="100%" stop-color="%23ffb300"/></radialGradient><linearGradient id="shades" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23333"/><stop offset="50%" stop-color="%23111"/><stop offset="100%" stop-color="%23000"/></linearGradient></defs><rect width="200" height="250" fill="url(%23bg)"/><path d="M 40 250 Q 100 200 160 250 Z" fill="%23111" /><rect x="80" y="190" width="40" height="40" fill="%23d4a37ae" /><path d="M 80 220 Q 100 240 120 220" fill="none" stroke="%23ffd700" stroke-width="6" stroke-linecap="round" /><circle cx="100" cy="235" r="10" fill="%23ffd700" /><text x="100" y="239" font-family="Arial" font-size="10" font-weight="bold" fill="%23000" text-anchor="middle">90</text><ellipse cx="100" cy="130" rx="55" ry="65" fill="%23fcd7b9" /><ellipse cx="45" cy="130" rx="10" ry="15" fill="%23fcd7b9" /><ellipse cx="155" cy="130" rx="10" ry="15" fill="%23fcd7b9" /><path d="M 40 90 Q 100 -20 160 90 Z" fill="%23ff4500" /><rect x="35" y="85" width="130" height="20" rx="5" fill="%23cc3700" /><rect x="40" y="110" width="120" height="30" rx="3" fill="url(%23shades)" /><rect x="50" y="140" width="30" height="10" fill="%23111" /><rect x="120" y="140" width="30" height="10" fill="%23111" /><rect x="60" y="150" width="10" height="5" fill="%23111" /><rect x="130" y="150" width="10" height="5" fill="%23111" /><polygon points="55,115 80,115 70,135 45,135" fill="%23fff" opacity="0.3" /><polygon points="125,115 150,115 140,135 115,135" fill="%23fff" opacity="0.3" /><path d="M 95 145 Q 100 160 105 145 Z" fill="%23e5b48e" /><path d="M 80 175 Q 100 185 120 170" fill="none" stroke="%23aa6040" stroke-width="4" stroke-linecap="round" /><circle cx="130" cy="180" r="25" fill="%23ff8da1" stroke="%23ffb6c1" stroke-width="3" opacity="0.95" /><path d="M 120 170 Q 130 165 145 180" fill="none" stroke="%23fff" stroke-width="2" stroke-linecap="round" opacity="0.7" /></svg>');
+            background-size: cover;
+            background-position: center;
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; /* Freeform shape */
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.1), 5px 10px 20px rgba(0,0,0,0.3);
+            border: 4px solid #fff;
+        }
+        
+        /* Sparkly Party Hat */
+        .party-hat {
+            font-size: 4.5rem;
+            position: absolute;
+            top: -55px;
+            left: 50%;
+            transform: translateX(-20%) rotate(18deg);
+            filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));
+            z-index: 30;
+        }
+
+        /* Lightning */
+        .lightning {
+            position: absolute;
+            top: -20px;
+            left: 15%;
+            font-size: 2.5rem;
+            color: #c00;
+            font-family: 'Anton', sans-serif;
+            transform: rotate(-15deg);
+            text-shadow: 1px 1px 0 #fff, 2px 2px 0 #000;
+            z-index: 28;
+        }
+
+        /* Cake */
+        .cake-img {
+            font-size: 7.5rem;
+            margin-top: -40px;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.4));
+            z-index: 30;
+        }
+
+        /* Info Tape Section */
+        .info-tape-box {
+            margin-top: 1rem;
+            background: #fff;
+            padding: 2rem 1.5rem;
+            width: 90%;
+            position: relative;
+            box-shadow: 4px 6px 1px rgba(0,0,0,0.08); /* slight offset shadow for retro feel */
+            border: 1px solid #ddd;
+            transform: rotate(1deg);
+            z-index: 20;
+        }
+
+        .tape {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            width: 140px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            backdrop-filter: blur(2px);
+        }
+
+        .info-row {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            display: inline-block;
+            background: #111;
+            color: #fff;
+            padding: 2px 10px;
+            font-family: 'Anton', sans-serif;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            transform: rotate(-2deg);
+            margin-bottom: 8px;
+        }
+
+        .info-text {
+            font-size: 1.15rem;
+            font-weight: bold;
+            line-height: 1.4;
+            color: #222;
+            word-break: keep-all;
+        }
+
+        .sub-text {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 4px;
+        }
+
+        /* Action Button */
+        .btn-wrapper {
+            margin-top: 3rem;
+            z-index: 30;
+        }
+
+        .attend-btn {
+            background: #E33E2E;
+            color: #fff;
+            font-family: 'Gowun Dodum', sans-serif;
+            font-weight: bold;
+            font-size: 1.3rem;
+            padding: 1rem 3rem;
+            border: 3px solid #111;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 6px 6px 0px #111;
+            transition: all 0.1s;
+            position: relative;
+        }
+
+        .attend-btn:active {
+            transform: translate(6px, 6px);
+            box-shadow: 0px 0px 0px #111;
+        }
+
+        /* 90s Floating Background Elements */
+        .bg-floater {
+            position: fixed;
+            z-index: 1; /* Below the main container */
+            opacity: 0.35;
+            pointer-events: none;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.3));
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-40px) rotate(20deg); }
+            100% { transform: translateY(0) rotate(-15deg); }
+        }
+
+        @keyframes drift-reverse {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(30px) rotate(-25deg); }
+            100% { transform: translateY(0) rotate(15deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 90s Floating Background -->
+    <div class="bg-floater" style="top: 10%; left: 2%; font-size: 3.5rem; animation: drift 6s ease-in-out infinite;">👾</div>
+    <div class="bg-floater" style="top: 20%; right: 5%; font-size: 4rem; animation: drift-reverse 8s ease-in-out infinite;">💿</div>
+    <div class="bg-floater" style="top: 45%; left: 8%; font-size: 3.5rem; animation: drift 7s ease-in-out infinite; animation-delay: 1s;">📼</div>
+    <div class="bg-floater" style="bottom: 25%; right: 8%; font-size: 3rem; animation: drift-reverse 6s ease-in-out infinite; animation-delay: 2s;">✌️</div>
+    <div class="bg-floater" style="bottom: 8%; left: 5%; font-size: 4.5rem; animation: drift 9s ease-in-out infinite; animation-delay: 0.5s;">🛹</div>
+    <div class="bg-floater" style="top: 60%; right: 12%; font-size: 2.5rem; animation: drift-reverse 5s ease-in-out infinite; animation-delay: 1.5s;">💾</div>
+    <div class="bg-floater" style="top: 5%; right: 35%; font-size: 2rem; animation: drift 5s ease-in-out infinite;">🍒</div>
+    <div class="bg-floater" style="bottom: 5%; right: 45%; font-size: 3rem; animation: drift-reverse 7s ease-in-out infinite;">🌟</div>
+
+    <div class="collage-container" style="z-index: 10;">
+        <!-- Garland Top -->
+        <div class="garland"></div>
+
+        <!-- Blue Star -->
+        <div class="blue-star">★</div>
+
+        <!-- Shiny Foil Balloon SVGs -->
+        <div class="balloon balloon-red">
+            <svg width="60" height="90" viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="red-foil" cx="30%" cy="30%" r="60%">
+                        <stop offset="0%" stop-color="#ff9999" />
+                        <stop offset="20%" stop-color="#ee3333" />
+                        <stop offset="80%" stop-color="#aa0000" />
+                        <stop offset="100%" stop-color="#550000" />
+                    </radialGradient>
+                </defs>
+                <ellipse cx="30" cy="35" rx="25" ry="32" fill="url(#red-foil)" />
+                <polygon points="23,65 37,65 30,73" fill="#aa0000" />
+                <path d="M 30,73 Q 40,82 25,90" fill="none" stroke="#999" stroke-width="1.5" />
+            </svg>
+        </div>
+
+        <div class="balloon balloon-blue">
+            <svg width="64" height="95" viewBox="0 0 64 95" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <radialGradient id="blue-foil" cx="30%" cy="30%" r="60%">
+                        <stop offset="0%" stop-color="#99ccff" />
+                        <stop offset="20%" stop-color="#2277cc" />
+                        <stop offset="80%" stop-color="#113377" />
+                        <stop offset="100%" stop-color="#051535" />
+                    </radialGradient>
+                </defs>
+                <ellipse cx="32" cy="38" rx="27" ry="34" fill="url(#blue-foil)" />
+                <polygon points="25,70 39,70 32,78" fill="#113377" />
+                <path d="M 32,78 Q 20,88 35,95" fill="none" stroke="#999" stroke-width="1.5" />
+            </svg>
+        </div>
+
+        <!-- Ransom Title -->
+        <div class="ransom-title">
+            <div class="ransom-word">
+                <span class="letter">H</span><span class="letter">a</span><span class="letter">P</span><span class="letter">P</span><span class="letter">y</span>
+            </div>
+            <div class="ransom-word">
+                <span class="letter">B</span><span class="letter">i</span><span class="letter">R</span><span class="letter">t</span><span class="letter">H</span><span class="letter">D</span><span class="letter">A</span><span class="letter">y</span>
+            </div>
+        </div>
+
+        <!-- Foil 36 Background -->
+        <div class="foil-number-container">
+            <div class="foil-number">3</div>
+            <div class="foil-number foil-num-6">6</div>
+        </div>
+
+        <!-- Center Stage (Photo & Cake) -->
+        <div class="center-stage">
+            <div class="photo-wrap">
+                <div class="lightning">⚡</div>
+                <div class="party-hat">🎉</div>
+                <div class="photo-cutout"></div>
+            </div>
+            <div class="cake-img">🎂</div>
+        </div>
+
+        <!-- Info Box (Tape) -->
+        <div class="info-tape-box">
+            <div class="tape"></div>
+            
+            <div class="info-row">
+                <div class="info-label">DATE</div>
+                <div class="info-text">2026. 07. 16</div>
+                <div class="sub-text">민준이의 36번째 생일 파티</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">LOCATION</div>
+                <div class="info-text">아지트: 래미안안양메가트리아</div>
+                <div class="sub-text">경기도 안양시 만안구 안양천서로 177</div>
+            </div>
+
+            <div class="info-row">
+                <div class="info-label">MESSAGE</div>
+                <div class="info-text">"민준이 보러 메가또리아로 놀러오세요~"</div>
+            </div>
+        </div>
+
+        <!-- Attend Button -->
+        <div class="btn-wrapper">
+            <button class="attend-btn" onclick="attendClick()" id="attendBtn">
+                완전 참석 🤘
+            </button>
+        </div>
+    </div>
+
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        function attendClick() {
+            const btn = document.getElementById('attendBtn');
+            btn.innerHTML = '접수 완료 🔥';
+            btn.style.background = '#111';
+            btn.style.color = '#fff';
+            
+            const count = 250;
+            const defaults = {
+                origin: { y: 0.7 },
+                zIndex: 100,
+                colors: ['#E33E2E', '#2277cc', '#ffffff', '#ffd700']
+            };
+
+            function fire(particleRatio, opts) {
+                confetti(Object.assign({}, defaults, opts, {
+                    particleCount: Math.floor(count * particleRatio)
+                }));
+            }
+
+            fire(0.25, { spread: 26, startVelocity: 55 });
+            fire(0.2, { spread: 60 });
+            fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+            fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+            fire(0.1, { spread: 120, startVelocity: 45 });
+
+            setTimeout(() => {
+                alert("🤟 참석 확인! 민준이가 힙하게 기다리고 있습니다.");
+            }, 600);
+        }
+    </script>
+</body>
+</html>
