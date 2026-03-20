@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🎂 생일 파티에 초대합니다!</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Jua (귀여운 한글 폰트) -->
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Canvas Confetti (폭죽 효과) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'jua': ['Jua', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            100: '#ffe4e6',
+                            300: '#f9a8d4',
+                            500: '#ec4899',
+                            700: '#be185d',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            /* 귀엽고 화려한 그라데이션 배경 */
+            background: linear-gradient(-45deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+
+        .polaroid {
+            background: white;
+            padding: 10px 10px 25px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: rotate(-3deg);
+            transition: transform 0.3s ease;
+        }
+        
+        .polaroid:hover {
+            transform: rotate(0deg) scale(1.02);
+        }
+
+        /* 커스텀 스크롤바 숨기기 */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 overflow-x-hidden">
+
+    <!-- 장식용 이모지 (절대 위치) -->
+    <div class="fixed top-10 left-4 text-4xl animate-float opacity-70">🎈</div>
+    <div class="fixed top-20 right-8 text-4xl animate-float opacity-70" style="animation-delay: 1s;">✨</div>
+    <div class="fixed bottom-10 left-10 text-4xl animate-float opacity-70" style="animation-delay: 2s;">🎁</div>
+    <div class="fixed bottom-20 right-4 text-4xl animate-float opacity-70" style="animation-delay: 0.5s;">🥳</div>
+
+    <!-- 메인 초대장 카드 -->
+    <main class="glass-card w-full max-w-md rounded-3xl p-6 sm:p-8 relative z-10 overflow-hidden">
+        <!-- 상단 장식 -->
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-400 via-purple-400 to-blue-400"></div>
+
+        <header class="text-center mt-4 mb-8">
+            <span class="inline-block bg-brand-100 text-brand-700 px-4 py-1 rounded-full text-sm tracking-widest mb-4">INVITATION</span>
+            <h1 class="text-3xl sm:text-4xl text-gray-800 leading-snug drop-shadow-sm">
+                저의 생일 파티에<br>
+                <span class="text-brand-500 text-4xl sm:text-5xl mt-2 inline-block">초대합니다!</span>
+            </h1>
+        </header>
+
+        <!-- 귀여운 사진 또는 일러스트 (폴라로이드 스타일) -->
+        <div class="flex justify-center mb-8 relative">
+            <div class="polaroid w-48 h-48 sm:w-56 sm:h-56">
+                <div class="w-full h-full bg-gray-100 flex items-center justify-center text-6xl rounded overflow-hidden relative">
+                    <!-- Placeholder 이미지 대체용 CSS 그라데이션 및 이모지 -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-yellow-200 to-pink-200 flex items-center justify-center">
+                        <span class="animate-bounce-slow text-7xl">🎂</span>
+                    </div>
+                </div>
+            </div>
+            <!-- 하트 배지 -->
+            <div class="absolute -bottom-4 right-10 bg-brand-500 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white transform rotate-12">
+                D-Day
+            </div>
+        </div>
+
+        <section class="space-y-6 text-center text-gray-700 text-lg">
+            <p class="leading-relaxed">
+                즐거운 날, 소중한 분들과<br>
+                함께 행복한 시간을 보내고 싶어요.<br>
+                꼭 오셔서 자리를 빛내주세요! ✨
+            </p>
+
+            <!-- 상세 정보 카드 -->
+            <div class="bg-gray-50/80 rounded-2xl p-5 space-y-4 border border-gray-100">
+                <!-- 날짜 -->
+                <div class="flex items-center gap-4 text-left">
+                    <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-2xl flex-shrink-0">
+                        <i class="ri-calendar-event-fill"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">날짜</p>
+                        <p class="text-lg text-gray-800">2026년 10월 28일 (수)</p>
+                        <p class="text-brand-500 text-sm">오후 7시 00분</p>
+                    </div>
+                </div>
+
+                <hr class="border-gray-200 border-dashed">
+
+                <!-- 장소 -->
+                <div class="flex items-center gap-4 text-left">
+                    <div class="w-12 h-12 rounded-full bg-green-100 text-green-500 flex items-center justify-center text-2xl flex-shrink-0">
+                        <i class="ri-map-pin-fill"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-500">장소</p>
+                        <p class="text-lg text-gray-800">모두의연구소 강남캠퍼스</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 액션 버튼들 -->
+        <footer class="mt-8 space-y-3">
+            <button onclick="openMap()" class="w-full bg-gray-800 text-white py-4 rounded-2xl text-xl hover:bg-gray-700 transition-colors shadow-lg flex items-center justify-center gap-2">
+                <i class="ri-map-2-line"></i> 지도 길찾기
+            </button>
+            <button onclick="triggerRSVP()" class="w-full bg-brand-500 text-white py-4 rounded-2xl text-xl hover:bg-brand-600 transition-colors shadow-lg shadow-pink-200 flex items-center justify-center gap-2 animate-pulse-slow hover:animate-none">
+                <i class="ri-mail-send-line"></i> 참석할게요! 💖
+            </button>
+        </footer>
+    </main>
+
+    <!-- 참석 확인 모달 (alert 대신 사용) -->
+    <div id="rsvpModal" class="fixed inset-0 bg-black/40 z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm p-4">
+        <div id="modalContent" class="bg-white rounded-3xl p-8 max-w-sm w-full text-center transform scale-95 transition-transform duration-300 shadow-2xl">
+            <div class="text-6xl mb-4 animate-bounce-slow">🥰</div>
+            <h3 class="text-2xl text-gray-800 mb-2">정말 감사합니다!</h3>
+            <p class="text-gray-600 mb-6 text-lg">최고의 파티를 준비해서<br>기다리고 있을게요!</p>
+            <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-800 py-3 rounded-xl text-lg hover:bg-gray-200 transition-colors">
+                닫기
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 페이지 로드 시 가벼운 폭죽 애니메이션
+        window.onload = () => {
+            setTimeout(() => {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#f9a8d4', '#ec4899', '#a1c4fd', '#fde047']
+                });
+            }, 500);
+        };
+
+        // 지도 열기 (네이버/카카오/구글 맵 검색 결과로 이동)
+        function openMap() {
+            const query = encodeURIComponent('모두의연구소 강남캠퍼스');
+            // 네이버 지도 검색 링크
+            const mapUrl = `https://map.naver.com/v5/search/${query}`;
+            window.open(mapUrl, '_blank');
+        }
+
+        // 참석 모달 열기 및 강력한 폭죽 효과
+        function triggerRSVP() {
+            // 폭죽 효과
+            const duration = 3000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#ec4899', '#fde047']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#a1c4fd', '#fecfef']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            // 모달 표시
+            const modal = document.getElementById('rsvpModal');
+            const content = document.getElementById('modalContent');
+            
+            modal.classList.remove('hidden');
+            // DOM 업데이트 후 애니메이션 적용을 위해 약간의 지연
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            const modal = document.getElementById('rsvpModal');
+            const content = document.getElementById('modalContent');
+            
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300); // transition 시간과 일치
+        }
+    </script>
+</body>
+</html>
