@@ -99,7 +99,7 @@ export default function LoginModal({ wb }: LoginModalProps) {
       >
         {/* 헤더 */}
         <div className="bg-gradient-to-br from-primary to-accent px-6 pt-8 pb-6 text-center">
-          <img src="/nice_logo.png" alt="NICE" className="h-10 w-auto mx-auto mb-3"
+          <img src={`${import.meta.env.BASE_URL}nice_logo.png`} alt="NICE" className="h-10 w-auto mx-auto mb-3"
             style={{ filter: "brightness(0) invert(1)", opacity: 0.95 }} />
           <h1 className="text-white font-bold text-xl mb-1">NASA Discovery</h1>
           <p className="text-white/75 text-sm">실무 AI 내재화 워크북</p>

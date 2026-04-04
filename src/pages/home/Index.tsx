@@ -126,7 +126,7 @@ export default function WorkbookPage() {
       <nav className="hidden lg:flex fixed left-0 top-0 h-full w-60 flex-col bg-sidebar border-r border-sidebar-border z-40 pt-6 pb-6">
         <div className="px-5 mb-6">
           <div className="flex items-center gap-2.5 mb-1">
-            <img src="/nice_logo.png" alt="NICE" className="w-7 h-7 object-contain" />
+            <img src={`${import.meta.env.BASE_URL}nice_logo.png`} alt="NICE" className="w-7 h-7 object-contain" />
             <span className="font-bold text-sm text-sidebar-foreground">NASA Discovery</span>
           </div>
           <p className="text-xs text-muted-foreground">NICE그룹 실무 AI 내재화 프로젝트</p>
@@ -202,7 +202,7 @@ export default function WorkbookPage() {
           <div className="relative container mx-auto px-6 py-14 max-w-5xl">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div className="flex items-center gap-3 mb-4">
-                <img src="/nice_logo.png" alt="NICE" className="h-9 w-auto" style={{ filter: "brightness(0) invert(1)", opacity: 0.9 }} />
+                <img src={`${import.meta.env.BASE_URL}nice_logo.png`} alt="NICE" className="h-9 w-auto" style={{ filter: "brightness(0) invert(1)", opacity: 0.9 }} />
                 <span className="text-white/40 text-xl">|</span>
                 <span className="text-white/80 text-sm font-semibold tracking-wide">NICE Group AI Discovery</span>
               </div>
@@ -658,7 +658,7 @@ export default function WorkbookPage() {
           {/* ── 푸터 ── */}
           <footer className="border-t border-border pt-8 pb-12 text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
-              <img src="/nice_logo.png" alt="NICE" className="h-7 w-auto opacity-60" />
+              <img src={`${import.meta.env.BASE_URL}nice_logo.png`} alt="NICE" className="h-7 w-auto opacity-60" />
               <span className="text-muted-foreground/40 text-lg">|</span>
               <span className="font-semibold text-sm text-foreground">NASA Discovery</span>
             </div>
