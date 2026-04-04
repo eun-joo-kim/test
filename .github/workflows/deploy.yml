@@ -35,13 +35,18 @@ jobs:
       - name: Build
         run: npm run build
         
+      - name: Prepare directory
+        run: |
+          mkdir -p deploy/workbook_nice
+          cp -r dist/* deploy/workbook_nice/
+        
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
+          path: './deploy'
 
   deploy:
     environment:
