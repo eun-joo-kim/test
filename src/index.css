@@ -1,0 +1,210 @@
+@import url("https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+==========================================================================
+【AI HANDOVER NOTE】
+1. DESIGN PHILOSOPHY:
+   - Neo-minimalism meets AI-Tech aesthetic: 깔끔한 화이트 베이스에 딥 블루/퍼플 그라디언트를 활용한 현대적 문서 디자인
+   - Bento-style modular surfaces: 미션 카드, 예시 블록, Toolkit 섹션을 명확히 구분하는 카드 기반 레이아웃
+   - Progressive disclosure: 5일 미션 구조를 시각적 계층으로 표현하여 학습 흐름을 직관적으로 전달
+   - 한국어 가독성 최우선: Pretendard 폰트로 장문 읽기에 최적화, 넉넉한 행간과 여백 확보
+
+2. TYPOGRAPHY:
+   - Sans: Pretendard는 한글 웹 타이포그래피의 표준으로, 가변 폰트 기술로 다양한 굵기 지원. 문서형 콘텐츠의 장시간 독서에 최적화된 중성적 디자인. Noto Sans KR을 fallback으로 배치하여 CJK 문자 완벽 지원
+   - Mono: JetBrains Mono는 코드 예시, API 키, 프롬프트 템플릿 등 기술 콘텐츠 표시에 사용. 리가처 지원으로 가독성 우수
+
+3. COLOR SYSTEM:
+   - 브랜드 주색: Deep Blue-Purple (H: 260°) - AI/테크 산업의 신뢰감과 혁신성을 동시에 표현
+   - --brand → --primary (미션 CTA, 진행 표시), --accent (청록색 H: 190° 포인트 컬러, 링크/하이라이트)
+   - Gradient system: primary-to-accent 그라디언트를 hero 섹션, 카드 테두리, 진행 바에 활용
+   - 의미색: success (미션 완료), warning (주의사항), destructive (에러/제한사항)
+   - Sidebar: 네비게이션용 중성 회색 톤, Day 1-5 섹션 구분에 subtle한 accent 적용
+
+4. USAGE GUIDE:
+   - Layout: Centered container (max-w-5xl), 문서 가독성을 위한 좁은 본문 영역
+   - Card design: backdrop-blur + subtle border + shadow-sm으로 Glassmorphism 2.0 효과. 미션 카드는 hover 시 ring-accent 강조
+   - Gradient usage: bg-gradient-to-br from-primary/10 to-accent/10을 hero, 섹션 구분에 활용
+   - Typography scale: 제목 (text-3xl font-bold), 미션명 (text-xl font-semibold), 본문 (text-base leading-relaxed)
+   - Spacing: 섹션 간 py-16, 카드 내부 p-6, 리스트 항목 space-y-4로 넉넉한 여백 확보
+   - Interactive elements: 미션 체크박스, 진행률 표시, 예시 코드 복사 버튼 등에 accent 색상 활용
+   - Responsive: 모바일에서 카드 grid를 single column으로 전환, 사이드바는 drawer 형태로 변환
+==========================================================================
+*/
+
+:root {
+  /* Typography */
+  --font-sans: Pretendard, 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Core UI Tokens */
+  --background: oklch(0.99 0.002 260);
+  --foreground: oklch(0.15 0.01 260);
+  --card: oklch(0.98 0.005 260);
+  --card-foreground: oklch(0.18 0.01 260);
+  --popover: oklch(0.99 0.002 260);
+  --popover-foreground: oklch(0.15 0.01 260);
+  --primary: oklch(0.45 0.18 260);
+  --primary-foreground: oklch(0.98 0.005 260);
+  --secondary: oklch(0.92 0.01 260);
+  --secondary-foreground: oklch(0.22 0.015 260);
+  --muted: oklch(0.95 0.008 260);
+  --muted-foreground: oklch(0.48 0.02 260);
+  --accent: oklch(0.55 0.15 190);
+  --accent-foreground: oklch(0.98 0.005 190);
+  --destructive: oklch(0.55 0.22 15);
+  --destructive-foreground: oklch(0.98 0.005 15);
+  --border: oklch(0.88 0.012 260);
+  --input: oklch(0.88 0.012 260);
+  --ring: oklch(0.55 0.15 190);
+  
+  /* Chart Tokens */
+  --chart-1: oklch(0.45 0.18 260);
+  --chart-2: oklch(0.55 0.15 190);
+  --chart-3: oklch(0.58 0.16 280);
+  --chart-4: oklch(0.52 0.14 240);
+  --chart-5: oklch(0.60 0.12 200);
+  
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.97 0.005 260);
+  --sidebar-foreground: oklch(0.35 0.02 260);
+  --sidebar-primary: oklch(0.45 0.18 260);
+  --sidebar-primary-foreground: oklch(0.98 0.005 260);
+  --sidebar-accent: oklch(0.55 0.15 190);
+  --sidebar-accent-foreground: oklch(0.98 0.005 190);
+  --sidebar-border: oklch(0.90 0.01 260);
+  --sidebar-ring: oklch(0.55 0.15 190);
+}
+
+.dark {
+  --background: oklch(0.12 0.015 260);
+  --foreground: oklch(0.92 0.008 260);
+  --card: oklch(0.15 0.018 260);
+  --card-foreground: oklch(0.90 0.01 260);
+  --popover: oklch(0.13 0.016 260);
+  --popover-foreground: oklch(0.92 0.008 260);
+  --primary: oklch(0.62 0.20 260);
+  --primary-foreground: oklch(0.12 0.015 260);
+  --secondary: oklch(0.22 0.025 260);
+  --secondary-foreground: oklch(0.88 0.012 260);
+  --muted: oklch(0.20 0.020 260);
+  --muted-foreground: oklch(0.62 0.025 260);
+  --accent: oklch(0.68 0.18 190);
+  --accent-foreground: oklch(0.12 0.015 190);
+  --destructive: oklch(0.62 0.25 15);
+  --destructive-foreground: oklch(0.95 0.008 15);
+  --border: oklch(0.25 0.022 260);
+  --input: oklch(0.25 0.022 260);
+  --ring: oklch(0.68 0.18 190);
+  
+  /* Chart Tokens */
+  --chart-1: oklch(0.62 0.20 260);
+  --chart-2: oklch(0.68 0.18 190);
+  --chart-3: oklch(0.65 0.19 280);
+  --chart-4: oklch(0.60 0.17 240);
+  --chart-5: oklch(0.70 0.15 200);
+  
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.10 0.018 260);
+  --sidebar-foreground: oklch(0.75 0.020 260);
+  --sidebar-primary: oklch(0.62 0.20 260);
+  --sidebar-primary-foreground: oklch(0.12 0.015 260);
+  --sidebar-accent: oklch(0.68 0.18 190);
+  --sidebar-accent-foreground: oklch(0.12 0.015 190);
+  --sidebar-border: oklch(0.22 0.020 260);
+  --sidebar-ring: oklch(0.68 0.18 190);
+}
+
+@theme inline {
+  /* Shadcn Core Mapping */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts Mapping */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar Mapping */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Typography */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* Radius */
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans min-h-screen;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  code, pre {
+    @apply font-mono;
+  }
+
+  ::selection {
+    @apply bg-primary/20 text-primary;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
+  }
+}
