@@ -1,0 +1,2550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AX로 AI 에이전트 만들기</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           애플 키노트 흑백 스타일 — Apple WWDC Monochrome Design System
+           ============================================================ */
+        :root {
+            --primary: #1D1D1F;
+            --primary-light: #3A3A3C;
+            --primary-dark: #000000;
+            --secondary: #6E6E73;
+            --success: #1D1D1F;
+            --warning: #3A3A3C;
+            --danger: #1D1D1F;
+            --dark: #000000;
+            --gray: #6E6E73;
+            --light: #F5F5F7;
+            --white: #FFFFFF;
+            --ax: #1D1D1F;
+            --claude: #3A3A3C;
+            --vscode: #1D1D1F;
+            --google: #3A3A3C;
+            --openai: #1D1D1F;
+            --gradient: linear-gradient(135deg, #1D1D1F 0%, #3A3A3C 100%);
+            --gradient-ax: linear-gradient(135deg, #000000 0%, #1D1D1F 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            background: #000000;
+            color: #1D1D1F;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .presentation {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 80px 60px;
+            background: #FFFFFF;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .slide.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        /* 슬라이드 타입별 배경 */
+        .slide-title {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .slide-section {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .slide-ax {
+            background: #1D1D1F;
+            color: #FFFFFF;
+        }
+
+        .slide-dark {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .slide-content {
+            background: #FFFFFF;
+        }
+
+        /* 타이포그래피 */
+        h1 {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        h2 {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #1D1D1F;
+            letter-spacing: -0.01em;
+        }
+
+        .slide-title h2,
+        .slide-section h2,
+        .slide-ax h2,
+        .slide-dark h2 {
+            color: #FFFFFF;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1D1D1F;
+            letter-spacing: -0.01em;
+        }
+
+        p {
+            font-size: 1.4rem;
+            line-height: 1.8;
+            color: #3A3A3C;
+            max-width: 900px;
+        }
+
+        .slide-title p,
+        .slide-section p,
+        .slide-ax p,
+        .slide-dark p {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: rgba(255,255,255,0.18);
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        .emoji-large {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* 하이라이트 박스 */
+        .highlight-box {
+            background: #F5F5F7;
+            color: #1D1D1F;
+            padding: 2rem 3rem;
+            border-radius: 16px;
+            border-left: 4px solid #1D1D1F;
+            margin: 1.5rem 0;
+            font-size: 1.5rem;
+            font-weight: 500;
+            text-align: center;
+            max-width: 900px;
+        }
+
+        /* 그리드 레이아웃 */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 2rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 2rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 2rem;
+        }
+
+        /* 카드 */
+        .card {
+            background: #F5F5F7;
+            border-radius: 18px;
+            border: none;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #1D1D1F;
+        }
+
+        .card p {
+            font-size: 1rem;
+            color: #6E6E73;
+        }
+
+        .card-primary {
+            background: #1D1D1F;
+            color: #FFFFFF;
+        }
+
+        .card-primary h3,
+        .card-primary p {
+            color: #FFFFFF;
+        }
+
+        .card-ax {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .card-ax h3,
+        .card-ax p {
+            color: #FFFFFF;
+        }
+
+        .card-claude {
+            background: #3A3A3C;
+            color: #FFFFFF;
+        }
+
+        .card-claude h3,
+        .card-claude p {
+            color: #FFFFFF;
+        }
+
+        .card-vscode {
+            background: #1D1D1F;
+            color: #FFFFFF;
+        }
+
+        .card-vscode h3,
+        .card-vscode p {
+            color: #FFFFFF;
+        }
+
+        /* 비교 컴포넌트 */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 2rem;
+        }
+
+        .comparison-item {
+            background: #F5F5F7;
+            border-radius: 18px;
+            padding: 2.5rem;
+            position: relative;
+        }
+
+        .comparison-item.highlight-item {
+            background: #1D1D1F;
+            color: #FFFFFF;
+        }
+
+        .comparison-item.highlight-item,
+        .comparison-item.highlight-item * {
+            color: #FFFFFF;
+        }
+
+        .comparison-item.ax-item {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .comparison-item.ax-item h3,
+        .comparison-item.ax-item p,
+        .comparison-item.ax-item li {
+            color: #FFFFFF;
+        }
+
+        .comparison-badge {
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: #3A3A3C;
+            color: #FFFFFF;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* 플로우 */
+        .flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+
+        .flow-item {
+            background: #1D1D1F;
+            color: #FFFFFF;
+            padding: 1.5rem 2rem;
+            border-radius: 15px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .flow-item,
+        .flow-item * {
+            color: #FFFFFF;
+        }
+
+        .flow-arrow {
+            font-size: 2rem;
+            color: #C7C7CC;
+        }
+
+        /* 코드 블록 */
+        .code-block {
+            background: #1D1D1F;
+            color: #F5F5F7;
+            padding: 2rem;
+            border-radius: 15px;
+            font-family: 'SF Mono', 'Menlo', 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            text-align: left;
+            width: 100%;
+            max-width: 900px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+        }
+
+        .code-block .command {
+            color: #FFFFFF;
+        }
+
+        .code-block .comment {
+            color: rgba(255,255,255,0.35);
+        }
+
+        .code-block .string {
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* 타임라인 */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            max-width: 1000px;
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #E5E5EA;
+            z-index: 0;
+        }
+
+        .timeline-item {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .timeline-number {
+            width: 50px;
+            height: 50px;
+            background: #1D1D1F;
+            color: #FFFFFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1rem;
+        }
+
+        .timeline-item h4 {
+            font-size: 1.1rem;
+            color: #1D1D1F;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item p {
+            font-size: 0.9rem;
+            color: #6E6E73;
+        }
+
+        /* 스텝 인디케이터 */
+        .step-indicator {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #E5E5EA;
+        }
+
+        .step.active {
+            background: #1D1D1F;
+        }
+
+        .step.completed {
+            background: #3A3A3C;
+        }
+
+        /* 워크플로우 */
+        .workflow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .workflow-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .workflow-box {
+            background: #1D1D1F;
+            color: #FFFFFF;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .workflow-box.success {
+            background: #3A3A3C;
+        }
+
+        .workflow-box.warning {
+            background: #6E6E73;
+        }
+
+        .workflow-box.secondary {
+            background: #3A3A3C;
+        }
+
+        .workflow-arrow-down {
+            font-size: 1.5rem;
+            color: #6E6E73;
+        }
+
+        /* 파트 번호 */
+        .part-number {
+            font-size: 6rem;
+            font-weight: 900;
+            color: rgba(255,255,255,0.06);
+            position: absolute;
+            top: 60px;
+            left: 80px;
+        }
+
+        /* 리스트 */
+        .list {
+            text-align: left;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .list li {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+            list-style: none;
+            color: #3A3A3C;
+        }
+
+        .list li::before {
+            content: "\2713";
+            position: absolute;
+            left: 0;
+            color: #1D1D1F;
+            font-weight: bold;
+        }
+
+        /* FAQ */
+        .faq-item {
+            background: #F5F5F7;
+            border-radius: 15px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 1rem;
+            width: 100%;
+            max-width: 900px;
+            text-align: left;
+        }
+
+        .faq-q {
+            font-weight: 700;
+            color: #1D1D1F;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .faq-a {
+            color: #3A3A3C;
+            font-size: 1rem;
+        }
+
+        /* ── 상단 네비게이션 ── */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+            padding: 12px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6E6E73;
+            background: transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .nav-item:hover {
+            background: #F5F5F7;
+            color: #1D1D1F;
+        }
+
+        .nav-item.active {
+            background: #1D1D1F;
+            color: #FFFFFF;
+            border-radius: 20px;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 1rem;
+        }
+
+        .nav-item .nav-label {
+            display: none;
+        }
+
+        @media (min-width: 900px) {
+            .nav-item .nav-label {
+                display: inline;
+            }
+        }
+
+        .nav-divider {
+            color: #6E6E73;
+            opacity: 0.3;
+            font-size: 0.8rem;
+        }
+
+        /* ── 하단 컨트롤 ── */
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 100;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 15px 30px;
+            border-radius: 50px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+
+        .controls button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            background: #1D1D1F;
+            color: #FFFFFF;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls button:hover {
+            background: #000000;
+            transform: scale(1.08);
+        }
+
+        .controls button:disabled {
+            background: #C7C7CC;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-container {
+            width: 200px;
+            height: 6px;
+            background: #E5E5EA;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #1D1D1F;
+            transition: width 0.3s ease;
+        }
+
+        .slide-counter {
+            font-size: 0.9rem;
+            color: #6E6E73;
+            font-weight: 500;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        /* ── 반응형 ── */
+        @media (max-width: 1024px) {
+            .slide {
+                padding: 80px 50px 60px;
+            }
+            h1 { font-size: 2.5rem; }
+            h2 { font-size: 2rem; }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 70px 30px 60px;
+            }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            .grid-2, .grid-3, .comparison { grid-template-columns: 1fr; }
+            .controls { padding: 10px 20px; }
+        }
+
+        /* ── 애니메이션 ── */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide.active .animate {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        .animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .animate-delay-4 { animation-delay: 0.4s; opacity: 0; }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav" id="topNav">
+        <div class="nav-item" data-section="1" onclick="goToSection(1)">
+            <span class="nav-icon">🧠</span>
+            <span class="nav-label">AX 사고</span>
+        </div>
+        <span class="nav-divider">›</span>
+        <div class="nav-item" data-section="2" onclick="goToSection(2)">
+            <span class="nav-icon">🏗️</span>
+            <span class="nav-label">환경 구축</span>
+        </div>
+        <span class="nav-divider">›</span>
+        <div class="nav-item" data-section="3" onclick="goToSection(3)">
+            <span class="nav-icon">🤖</span>
+            <span class="nav-label">에이전트 이해</span>
+        </div>
+        <span class="nav-divider">›</span>
+        <div class="nav-item" data-section="4" onclick="goToSection(4)">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">작동 원리</span>
+        </div>
+        <span class="nav-divider">›</span>
+        <div class="nav-item" data-section="5" onclick="goToSection(5)">
+            <span class="nav-icon">🛠️</span>
+            <span class="nav-label">만들기</span>
+        </div>
+        <span class="nav-divider">›</span>
+        <div class="nav-item" data-section="6" onclick="goToSection(6)">
+            <span class="nav-icon">🎯</span>
+            <span class="nav-label">마무리</span>
+        </div>
+    </nav>
+
+    <div class="presentation">
+        <!-- ==================== Slide 1: 표지 ==================== -->
+        <div class="slide slide-title active" id="slide-1">
+            <div class="badge animate animate-delay-1">AX Agent Workshop</div>
+            <h1 class="animate animate-delay-2">AX로 AI 에이전트 만들기</h1>
+            <p class="subtitle animate animate-delay-3">코딩을 몰라도 AI 에이전트를 만들 수 있습니다</p>
+            <div class="flow animate animate-delay-4" style="margin-top: 2rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.3rem;">🧠</div>
+                    <p style="font-size: 0.9rem;">AX 사고</p>
+                </div>
+                <div class="flow-arrow" style="color: var(--white); opacity: 0.5;">→</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.3rem;">🏗️</div>
+                    <p style="font-size: 0.9rem;">환경 구축</p>
+                </div>
+                <div class="flow-arrow" style="color: var(--white); opacity: 0.5;">→</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.3rem;">🤖</div>
+                    <p style="font-size: 0.9rem;">에이전트 이해</p>
+                </div>
+                <div class="flow-arrow" style="color: var(--white); opacity: 0.5;">→</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.3rem;">🛠️</div>
+                    <p style="font-size: 0.9rem;">직접 만들기</p>
+                </div>
+            </div>
+            <p class="animate" style="margin-top: 2rem; font-size: 1rem; opacity: 0.7;">모두의연구소 KHP팀 팀장 김은주</p>
+        </div>
+
+        <!-- ==================== PART 1: AX적 사고 ==================== -->
+
+        <!-- Slide 2: Part 1 시작 -->
+        <div class="slide slide-ax" id="slide-2">
+            <span class="part-number">01</span>
+            <div class="badge">PART 1</div>
+            <h1>AX적 사고 전환</h1>
+            <p class="subtitle">먼저, 일하는 방식을 바꾸다</p>
+        </div>
+
+        <!-- Slide 3: AX란? -->
+        <div class="slide slide-content" id="slide-3">
+            <div class="emoji-large">🧠</div>
+            <h2>AX (AI Transformation)란?</h2>
+            <div class="highlight-box animate animate-delay-1">
+                AI를 "보조 도구"가 아닌 <span style="color: var(--warning);">"핵심 파트너"</span>로 활용하는 사고방식
+            </div>
+            <div class="grid-3 animate animate-delay-2" style="max-width: 1000px; margin-top: 2rem;">
+                <div class="card">
+                    <div class="card-icon">💬</div>
+                    <h3>기존: 챗봇 사용</h3>
+                    <p>가끔 질문할 때만<br>검색창처럼 사용</p>
+                </div>
+                <div class="card" style="border: 3px solid var(--ax);">
+                    <div class="card-icon">⚡</div>
+                    <h3>전환점</h3>
+                    <p>AI의 가능성을<br>직접 실험하고 확인</p>
+                </div>
+                <div class="card card-ax">
+                    <div class="card-icon">🚀</div>
+                    <h3>AX: 통합 협업</h3>
+                    <p>모든 업무 프로세스에<br>AI를 녹여내기</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: AX적 사고 비교 -->
+        <div class="slide slide-content" id="slide-4">
+            <h2>AX적 사고로의 전환</h2>
+            <p style="margin-bottom: 1.5rem;">도구는 쓰는 사람의 <strong>역량과 의지</strong>에 따라 성과가 달라집니다</p>
+            <div class="comparison" style="max-width: 1100px;">
+                <div class="comparison-item animate animate-delay-1" style="text-align: left; opacity: 0.8; border: 2px dashed var(--danger);">
+                    <h3 style="color: var(--danger);">🚫 벗어나야 할 사고</h3>
+                    <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+                        <li style="margin-bottom: 0.8rem; padding: 0.6rem; background: rgba(239,68,68,0.1); border-radius: 8px; font-size: 1rem;">
+                            <strong style="color: var(--danger);">❌ AI 편견</strong><br>
+                            <span style="color: var(--gray); font-size: 0.9rem;">"AI는 부정확하다, 결국 사람이 해야 한다"</span>
+                        </li>
+                        <li style="margin-bottom: 0.8rem; padding: 0.6rem; background: rgba(239,68,68,0.1); border-radius: 8px; font-size: 1rem;">
+                            <strong style="color: var(--danger);">❌ 기존 방식 고수</strong><br>
+                            <span style="color: var(--gray); font-size: 0.9rem;">"원래 이렇게 해왔으니까..."</span>
+                        </li>
+                        <li style="padding: 0.6rem; background: rgba(239,68,68,0.1); border-radius: 8px; font-size: 1rem;">
+                            <strong style="color: var(--danger);">❌ 보조 도구로 축소</strong><br>
+                            <span style="color: var(--gray); font-size: 0.9rem;">"실제 일은 내가, AI는 잡무만"</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="comparison-item ax-item animate animate-delay-2" style="text-align: left; box-shadow: 0 10px 40px rgba(139,92,246,0.3);">
+                    <div class="comparison-badge" style="background: var(--warning); color: var(--dark);">AX Mindset</div>
+                    <h3 style="color: white;">🚀 AX적 사고방식</h3>
+                    <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+                        <li style="margin-bottom: 0.8rem; padding: 0.6rem; background: rgba(255,255,255,0.15); border-radius: 8px; font-size: 1rem;">
+                            <strong style="color: #10B981;">✅ 적극적 활용 의지</strong><br>
+                            <span style="font-size: 0.9rem;">"AI의 가능성을 직접 실험한다"</span>
+                        </li>
+                        <li style="margin-bottom: 0.8rem; padding: 0.6rem; background: rgba(255,255,255,0.15); border-radius: 8px; font-size: 1rem;">
+                            <strong style="color: #10B981;">✅ 일하는 방식 재설계</strong><br>
+                            <span style="font-size: 0.9rem;">"AI 시대에 맞는 새로운 워크플로우"</span>
+                        </li>
+                        <li style="padding: 0.6rem; background: rgba(255,255,255,0.15); border-radius: 8px; font-size: 1rem;">
+                            <strong style="color: #10B981;">✅ 핵심 파트너로 격상</strong><br>
+                            <span style="font-size: 0.9rem;">"AI와 함께 성과를 만드는 협업 체계"</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Second Brain 개념 -->
+        <div class="slide slide-content" id="slide-5">
+            <h2>초지능(Second Brain)과의 협업</h2>
+            <p>AI는 단순한 도구가 아닙니다. 당신의 <strong>가장 강력한 파트너</strong>입니다.</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 900px; margin-top: 2rem;">
+                <div class="card" style="text-align: center; border: 2px solid var(--ax);">
+                    <div style="font-size: 3.5rem; margin-bottom: 0.8rem;">🧠</div>
+                    <h3>My Brain</h3>
+                    <p>창의성, 직관, 의사결정,<br>그리고 <strong>질문하는 능력</strong></p>
+                </div>
+                <div class="card card-ax" style="text-align: center;">
+                    <div style="font-size: 3.5rem; margin-bottom: 0.8rem;">🤖</div>
+                    <h3>Second Brain (AI)</h3>
+                    <p>무한한 지식, 데이터 처리,<br>논리적 추론과 <strong>초지능</strong></p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 2rem;">
+                "내 뇌의 한계를 <strong>Second Brain</strong>으로 확장하는 것,<br>이것이 진정한 AX 협업입니다."
+            </div>
+        </div>
+
+        <!-- Slide 6: 파이프라인 사고 -->
+        <div class="slide slide-content" id="slide-6">
+            <h2>업무를 파이프라인으로 설계하라</h2>
+            <p>에이전트의 핵심은 업무를 하나의 <strong>흐름(Flow)</strong>으로 바라보는 것입니다.</p>
+            <div class="flow animate animate-delay-1" style="margin: 2rem 0;">
+                <div class="flow-item" style="background: var(--dark);">
+                    <div style="font-size: 1.4rem;">INPUT</div>
+                    <div style="font-size: 0.85rem;">재료/데이터/맥락</div>
+                </div>
+                <div class="flow-arrow" style="color: var(--gray);">+</div>
+                <div class="flow-item" style="background: var(--ax);">
+                    <div style="font-size: 1.4rem;">PROCESS</div>
+                    <div style="font-size: 0.85rem;"><strong>AI Agent</strong> 수행</div>
+                </div>
+                <div class="flow-arrow" style="color: var(--gray);">=</div>
+                <div class="flow-item" style="background: var(--success);">
+                    <div style="font-size: 1.4rem;">OUTPUT</div>
+                    <div style="font-size: 0.85rem;">결과물/가치</div>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="background: var(--light); color: var(--dark); border-left: 5px solid var(--ax);">
+                <p style="font-size: 1.2rem; color: var(--dark);">"단순히 일을 '하는' 것이 아니라, 일이 자동으로 흘러가는 <strong style="color: var(--ax);">길(Pipeline)을 뚫는 것</strong>.<br>그것이 에이전트의 진짜 가치입니다."</p>
+            </div>
+            <div class="grid-3 animate animate-delay-3" style="max-width: 900px; margin-top: 1.5rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem;">🏗️</div>
+                    <p style="font-size: 0.9rem; color: var(--dark);"><strong>구조 설계</strong><br>AI가 일할 판을 짠다</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem;">🔗</div>
+                    <p style="font-size: 0.9rem; color: var(--dark);"><strong>연결 (Chaining)</strong><br>여러 단계를 연결</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem;">👁️</div>
+                    <p style="font-size: 0.9rem; color: var(--dark);"><strong>최종 감독</strong><br>품질 검수 및 피드백</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 개념 정리: PART 1 -->
+        <div class="slide slide-dark" id="slide-7">
+            <div style="font-size: 1.2rem; color: var(--primary-light); margin-bottom: 1rem;">📌 PART 1 정리</div>
+            <h2 style="color: white; margin-bottom: 2rem;">AX적 사고 핵심</h2>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1000px;">
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🤖</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.5rem;">AI = 파트너</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.95rem;">도구가 아닌<br>협업 파트너</p>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🧠</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.5rem;">Second Brain</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.95rem;">내 뇌의 한계를<br>AI로 확장</p>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🔗</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.5rem;">파이프라인</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.95rem;">INPUT → AI → OUTPUT<br>흐름으로 설계</p>
+                </div>
+            </div>
+            <div class="animate animate-delay-2" style="margin-top: 1.5rem; padding: 1rem 2rem; background: var(--ax); border-radius: 10px;">
+                <p style="color: white; font-size: 1.1rem; margin: 0;">💡 핵심: <strong>"AI에게 일을 시키는 것"</strong>이 아니라 <strong>"AI와 함께 일하는 것"</strong></p>
+            </div>
+            <!-- 퀴즈 섹션 -->
+            <div class="animate animate-delay-3" style="margin-top: 1.5rem; max-width: 800px;">
+                <div style="background: rgba(255,255,255,0.05); border: 2px solid var(--warning); border-radius: 12px; padding: 1.2rem;">
+                    <p style="color: var(--warning); font-weight: 600; margin-bottom: 1rem; font-size: 1rem;">🧠 퀴즈: AX에서 AI를 어떻게 봐야 할까요?</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">A. 명령을 수행하는 도구</button>
+                        <button onclick="this.style.background='var(--success)'; this.style.color='white'; document.getElementById('answer1').style.display='block';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">B. 함께 일하는 파트너</button>
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">C. 대체할 경쟁자</button>
+                    </div>
+                    <p id="answer1" style="display: none; margin-top: 1rem; color: var(--success); font-size: 0.95rem;">✅ 정답! AI는 도구가 아닌 <strong>협업 파트너</strong>로 바라봐야 합니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PART 2: 환경 구축 ==================== -->
+
+        <!-- Slide 8: Part 2 시작 -->
+        <div class="slide slide-section" id="slide-8">
+            <span class="part-number">02</span>
+            <div class="badge">PART 2</div>
+            <h1>AX 환경 구축</h1>
+            <p class="subtitle">AI와 협업할 수 있는 기반 만들기</p>
+        </div>
+
+        <!-- Slide 9: 환경의 의미 -->
+        <div class="slide slide-content" id="slide-9">
+            <h2>AI 협업을 위한 환경</h2>
+            <p>AI와 원활하게 소통하려면 <strong>AI가 이해할 수 있는 형식</strong>이 필요합니다.</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; margin-top: 2rem;">
+                <div class="card" style="border-left: 4px solid var(--ax);">
+                    <div class="card-icon">📝</div>
+                    <h3>표준 언어 (Markdown)</h3>
+                    <p>AI가 완벽하게 이해할 수 있는<br>텍스트 중심의 데이터</p>
+                </div>
+                <div class="card" style="border-left: 4px solid var(--ax);">
+                    <div class="card-icon">📂</div>
+                    <h3>구조화된 파일 시스템</h3>
+                    <p>AI가 정보를 찾고 탐색할 수 있는<br>명확한 폴더 경로</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 2rem;">
+                "AI와의 협업은 <strong>공통의 언어</strong>와 <strong>명확한 구조</strong>에서 시작됩니다."
+            </div>
+        </div>
+
+        <!-- Slide 10: Markdown -->
+        <div class="slide slide-content" id="slide-10">
+            <h2>📝 Markdown = AI의 공통 언어</h2>
+            <p style="margin-bottom: 1.5rem;">간단한 기호로 서식을 지정하는 텍스트 파일 형식 (.md)</p>
+            <div class="grid-2" style="max-width: 1000px;">
+                <div class="animate animate-delay-1">
+                    <div style="background: var(--dark); color: white; padding: 1.5rem; border-radius: 15px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;">
+                        <div style="color: var(--warning); margin-bottom: 0.5rem;"># 마크다운 문법</div>
+                        <div style="color: white; margin-bottom: 0.5rem;"># 제목 1</div>
+                        <div style="color: white; margin-bottom: 0.5rem;">## 제목 2</div>
+                        <div style="color: white; margin-bottom: 0.5rem;">**굵게** *기울임*</div>
+                        <div style="color: white; margin-bottom: 0.5rem;">- 목록 항목</div>
+                        <div style="color: white; margin-bottom: 0.5rem;">1. 번호 목록</div>
+                        <div style="color: white;">`코드` ```코드블록```</div>
+                    </div>
+                </div>
+                <div class="card animate animate-delay-2">
+                    <h3 style="margin-bottom: 1rem;">💡 왜 Markdown인가?</h3>
+                    <div style="text-align: left; font-size: 1rem;">
+                        <p style="margin-bottom: 0.5rem;">✅ <strong>AI 기본 언어</strong> - 모든 AI가 학습한 표준</p>
+                        <p style="margin-bottom: 0.5rem;">✅ <strong>가볍고 빠름</strong> - 어디서나 열림</p>
+                        <p style="margin-bottom: 0.5rem;">✅ <strong>버전 관리</strong> - Git과 완벽 호환</p>
+                        <p>✅ <strong>범용 호환</strong> - GitHub, Notion, VS Code</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: 구조화된 파일 시스템 -->
+        <div class="slide slide-content" id="slide-11">
+            <h2>📂 구조화된 파일 시스템</h2>
+            <p style="margin-bottom: 1.5rem;">파일 경로(Path) 자체가 AI에게는 문맥(Context)이 됩니다</p>
+            <div class="grid-2" style="max-width: 1100px;">
+                <div class="animate animate-delay-1">
+                    <div style="background: var(--dark); color: white; padding: 1.5rem; border-radius: 15px; text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;">
+                        <div style="color: var(--warning); margin-bottom: 1rem;">📁 my-project/</div>
+                        <div style="margin-left: 1rem;">
+                            <div style="color: var(--primary-light);">├── workspace/</div>
+                            <div style="margin-left: 1.5rem; color: var(--gray);">├── campaigns/</div>
+                            <div style="margin-left: 1.5rem; color: var(--gray);">├── products/</div>
+                            <div style="margin-left: 1.5rem; color: var(--gray);">└── targets/</div>
+                            <div style="color: var(--primary-light);">├── src/</div>
+                            <div style="color: var(--success);">├── README.md</div>
+                            <div style="color: var(--success);">└── config.yaml</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card animate animate-delay-2">
+                    <h3 style="margin-bottom: 1rem;">구조화의 3원칙</h3>
+                    <div style="text-align: left; font-size: 1rem;">
+                        <p style="margin-bottom: 0.8rem;"><strong style="color: var(--primary);">1. 의미 있는 폴더명</strong><br>
+                        <span style="font-size: 0.9rem; color: var(--gray);">폴더명만으로 내용 유추 가능</span></p>
+                        <p style="margin-bottom: 0.8rem;"><strong style="color: var(--primary);">2. 한 파일 = 한 주제</strong><br>
+                        <span style="font-size: 0.9rem; color: var(--gray);">AI 인용 최적화</span></p>
+                        <p><strong style="color: var(--primary);">3. 일관된 명명 규칙</strong><br>
+                        <span style="font-size: 0.9rem; color: var(--gray);">AI가 패턴 인식 용이</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: 필수 도구 -->
+        <div class="slide slide-content" id="slide-12">
+            <h2>🛠️ 필수 도구</h2>
+            <p style="margin-bottom: 1.5rem;">바이브 코딩을 위한 핵심 도구들</p>
+            <div class="grid-3" style="max-width: 1100px;">
+                <div class="card card-vscode animate animate-delay-1">
+                    <div class="card-icon">💻</div>
+                    <h3>코드 편집기</h3>
+                    <p>VS Code, Cursor 등<br>무료, 확장 풍부</p>
+                </div>
+                <div class="card animate animate-delay-2" style="border: 3px solid var(--ax);">
+                    <div class="card-icon">🤖</div>
+                    <h3>AI 코딩 어시스턴트</h3>
+                    <p style="font-size: 0.85rem;">Claude Code <span style="background: var(--secondary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem;">추천</span><br>Gemini CLI, Codex 등</p>
+                </div>
+                <div class="card animate animate-delay-3">
+                    <div class="card-icon">📁</div>
+                    <h3>파일 시스템</h3>
+                    <p>폴더 & Markdown<br>프로젝트 관리</p>
+                </div>
+            </div>
+            <div class="code-block animate animate-delay-4" style="max-width: 700px; margin-top: 1.5rem;">
+<span class="comment"># VS Code에서 터미널 열기</span>
+Cmd/Ctrl + `
+
+<span class="comment"># AI 코딩 도구 실행 (택1)</span>
+<span class="command">claude</span>  <span class="comment"># Claude Code</span>
+<span class="command">gemini</span>  <span class="comment"># Gemini CLI</span>
+
+<span class="comment"># 대화 시작!</span>
+<span class="string">"광고 카피 에이전트를 만들어줘"</span>
+            </div>
+        </div>
+
+        <!-- Slide 11: VS Code + AI 코딩 도구 통합 -->
+        <div class="slide slide-content" id="slide-13">
+            <h2>VS Code에서 AI 코딩 도구 사용하기</h2>
+            <p style="margin-bottom: 1rem;">Claude Code, Gemini CLI, Codex 등 원하는 도구 사용</p>
+            <div class="grid-2" style="max-width: 1100px;">
+                <div class="card animate animate-delay-1" style="text-align: left; border-left: 4px solid var(--vscode);">
+                    <h3 style="color: var(--vscode); margin-bottom: 0.8rem;">🖥️ 한 화면에서 모든 것</h3>
+                    <p style="font-size: 1rem; margin-bottom: 0.5rem;">• <strong>아래: 터미널</strong> - AI 코딩 도구 실행</p>
+                    <p style="font-size: 1rem; margin-bottom: 0.5rem;">• <strong>위: 편집기</strong> - AI가 수정한 파일 자동 표시</p>
+                    <p style="font-size: 1rem;">• <strong>왼쪽: 탐색기</strong> - 새 파일 생성 즉시 확인</p>
+                </div>
+                <div class="card animate animate-delay-2" style="text-align: left; border-left: 4px solid var(--ax);">
+                    <h3 style="color: var(--ax); margin-bottom: 0.8rem;">🤖 사용 가능한 AI 도구</h3>
+                    <p style="font-size: 1rem; margin-bottom: 0.5rem;">• <strong>Claude Code</strong> - Anthropic <span style="background: var(--secondary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem;">추천</span></p>
+                    <p style="font-size: 1rem; margin-bottom: 0.5rem;">• <strong>Gemini CLI</strong> - Google</p>
+                    <p style="font-size: 1rem;">• <strong>Codex / Copilot</strong> - OpenAI</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-3" style="margin-top: 1.5rem; font-size: 1.2rem;">
+                어떤 AI 도구를 쓰든 <strong>코드 ↔ AI 대화</strong>를 한 화면에서!
+            </div>
+        </div>
+
+        <!-- Slide 14: VS Code란? -->
+        <div class="slide slide-content" id="slide-14">
+            <div class="emoji-large">💻</div>
+            <h2>VS Code란?</h2>
+            <div class="highlight-box animate animate-delay-1">
+                Microsoft가 만든 <span style="color: var(--warning);">무료</span> 코드 편집기 (전 세계 개발자 70%+ 사용)
+            </div>
+            <div class="grid-3 animate animate-delay-2" style="max-width: 1000px; margin-top: 2rem;">
+                <div class="card">
+                    <div class="card-icon">🆓</div>
+                    <h3>완전 무료</h3>
+                    <p>오픈소스, 무료 사용<br>기업/개인 모두 OK</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🧩</div>
+                    <h3>확장 프로그램</h3>
+                    <p>수만 개의 플러그인<br>기능 무한 확장</p>
+                </div>
+                <div class="card card-vscode">
+                    <div class="card-icon">⚡</div>
+                    <h3>터미널 통합</h3>
+                    <p>AI 코딩 도구를<br>바로 실행 가능</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: VS Code 대안 - Google Antigravity -->
+        <div class="slide slide-content" id="slide-15">
+            <div class="emoji-large">🚀</div>
+            <h2>VS Code 대안: Google Antigravity</h2>
+            <p style="margin-bottom: 1.5rem;">AI 에이전트를 위해 설계된 차세대 개발 환경</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="text-align: left; border: 3px solid var(--google);">
+                    <h3 style="color: var(--google); margin-bottom: 1rem;">🌐 Antigravity란?</h3>
+                    <ul style="font-size: 1rem; line-height: 1.8; padding-left: 1.2rem;">
+                        <li>Google이 만든 <strong>AI-First IDE</strong></li>
+                        <li>VS Code 기반 (익숙한 인터페이스)</li>
+                        <li>Gemini 3 AI 모델 내장</li>
+                        <li><strong style="color: var(--success);">무료</strong> 공개 프리뷰 (2025.11~)</li>
+                    </ul>
+                </div>
+                <div class="card" style="text-align: left; border: 3px solid var(--ax);">
+                    <h3 style="color: var(--ax); margin-bottom: 1rem;">✨ VS Code와 다른 점</h3>
+                    <ul style="font-size: 1rem; line-height: 1.8; padding-left: 1.2rem;">
+                        <li>🤖 <strong>에이전트 사이드바</strong> 내장</li>
+                        <li>📋 <strong>Manager View</strong>: 여러 에이전트 동시 관리</li>
+                        <li>🔄 자율 작업: 계획 → 실행 → 검증</li>
+                        <li>🖥️ 에디터 + 터미널 + 브라우저 통합</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                Antigravity = <span style="color: var(--warning);">AI 에이전트에 특화된</span> VS Code!
+                <span style="font-size: 0.9rem; display: block; margin-top: 0.5rem; opacity: 0.9;">별도 CLI 설치 없이 에이전트 개발 가능</span>
+            </div>
+        </div>
+
+        <!-- Slide 16: AI 코딩 도구란? (3개 도구 소개) -->
+        <div class="slide slide-content" id="slide-16">
+            <div class="emoji-large">🤖</div>
+            <h2>AI 코딩 도구란?</h2>
+            <p style="margin-bottom: 1.5rem;">터미널에서 AI와 대화하며 코드를 만드는 도구</p>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="border: 3px solid var(--google);">
+                    <div class="card-icon">🌐</div>
+                    <h3 style="color: var(--google);">Gemini CLI</h3>
+                    <p style="font-size: 0.9rem;">Google의 Gemini AI<br><strong style="color: var(--success);">무료</strong> 사용 가능</p>
+                </div>
+                <div class="card" style="border: 3px solid var(--openai);">
+                    <div class="card-icon">💚</div>
+                    <h3 style="color: var(--openai);">Codex CLI</h3>
+                    <p style="font-size: 0.9rem;">OpenAI의 GPT AI<br>유료 API 기반</p>
+                </div>
+                <div class="card" style="border: 3px solid var(--claude);">
+                    <div class="card-icon">🧡</div>
+                    <h3 style="color: var(--claude);">Claude Code</h3>
+                    <p style="font-size: 0.9rem;">Anthropic의 Claude AI<br>월 $20 구독</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                모두 <strong>터미널(CLI)</strong>에서 자연어로 AI와 대화하며 코드를 생성/수정합니다
+            </div>
+        </div>
+
+        <!-- Slide 17: CLI란? -->
+        <div class="slide slide-content" id="slide-17">
+            <div class="emoji-large">⌨️</div>
+            <h2>CLI란?</h2>
+            <p style="margin-bottom: 1.5rem;"><strong>Command Line Interface</strong> - 명령어로 컴퓨터와 대화하는 방식</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px;">
+                <div class="card" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🖱️</div>
+                    <h3>GUI (그래픽)</h3>
+                    <p>마우스 클릭, 버튼<br>눈에 보이는 화면</p>
+                    <div style="background: var(--light); padding: 0.8rem; border-radius: 8px; margin-top: 1rem; font-size: 0.9rem;">
+                        예: 폴더 아이콘 더블클릭
+                    </div>
+                </div>
+                <div class="card" style="text-align: center; border: 3px solid var(--ax);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">⌨️</div>
+                    <h3 style="color: var(--ax);">CLI (명령어)</h3>
+                    <p>텍스트 명령어 입력<br>키보드로 모든 작업</p>
+                    <div style="background: var(--dark); color: var(--success); padding: 0.8rem; border-radius: 8px; margin-top: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                        $ cd Documents
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem; background: var(--light); color: var(--dark);">
+                💡 AI 코딩 도구는 CLI에서 <strong style="color: var(--ax);">자연어(한국어/영어)</strong>로 명령을 내립니다
+            </div>
+        </div>
+
+        <!-- Slide 18: Gemini CLI 장점 -->
+        <div class="slide slide-content" id="slide-18">
+            <div class="emoji-large">✨</div>
+            <h2 style="color: var(--google);">Gemini CLI 추천 이유</h2>
+            <p style="margin-bottom: 1.5rem;">Google이 만든 무료 AI 코딩 도구</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px;">
+                <div>
+                    <div class="card" style="margin-bottom: 1rem; border-left: 4px solid var(--success);">
+                        <h3 style="color: var(--success);">🆓 완전 무료</h3>
+                        <p>Google 계정만 있으면 무료 사용<br>API 비용 걱정 없음</p>
+                    </div>
+                    <div class="card" style="margin-bottom: 1rem; border-left: 4px solid var(--google);">
+                        <h3 style="color: var(--google);">⚡ 빠른 속도</h3>
+                        <p>Gemini 2.0 Flash 모델<br>응답 속도가 매우 빠름</p>
+                    </div>
+                    <div class="card" style="border-left: 4px solid var(--warning);">
+                        <h3 style="color: var(--warning);">🔧 쉬운 설치</h3>
+                        <p>npm 한 줄로 설치 완료<br><code style="background: var(--dark); color: var(--success); padding: 2px 6px; border-radius: 4px;">npm i -g @anthropic/gemini-cli</code></p>
+                    </div>
+                </div>
+                <div class="card animate animate-delay-2" style="background: var(--dark); color: white;">
+                    <h3 style="color: var(--google); margin-bottom: 1rem;">💻 사용 예시</h3>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; text-align: left; line-height: 1.8;">
+                        <p style="color: var(--gray);"># 터미널에서 실행</p>
+                        <p style="color: var(--success);">$ gemini</p>
+                        <p style="color: var(--gray); margin-top: 1rem;"># AI에게 요청</p>
+                        <p style="color: white;">> "로그인 페이지 만들어줘"</p>
+                        <p style="color: var(--gray); margin-top: 1rem;"># AI가 코드 생성 및 파일 저장</p>
+                        <p style="color: var(--warning);">✓ login.html 생성됨</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 19: Homebrew 설치 (macOS) -->
+        <div class="slide slide-content" id="slide-19">
+            <h2>Homebrew 설치하기 (macOS)</h2>
+            <p style="margin-bottom: 1.5rem;">macOS 패키지 관리자 - 개발 도구 설치의 필수품</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="text-align: left; border: 3px solid var(--warning);">
+                    <h3 style="color: var(--warning); margin-bottom: 1rem;">🍺 Homebrew란?</h3>
+                    <ul style="font-size: 1rem; line-height: 1.8; padding-left: 1.2rem;">
+                        <li>macOS용 <strong>패키지 관리자</strong></li>
+                        <li>터미널 명령어로 프로그램 설치</li>
+                        <li>개발자 필수 도구</li>
+                        <li>Node.js, Git 등 쉽게 설치</li>
+                    </ul>
+                    <p style="font-size: 0.85rem; color: var(--gray); margin-top: 1rem;">🪟 Windows는 Homebrew 불필요 → 다음 슬라이드로</p>
+                </div>
+                <div class="card" style="text-align: left; border: 3px solid var(--success);">
+                    <h3 style="color: var(--success); margin-bottom: 1rem;">📥 설치 방법</h3>
+                    <p style="font-size: 0.95rem; margin-bottom: 0.8rem;">1️⃣ 터미널 열기 (<strong>Cmd + Space</strong> → "터미널" 검색)</p>
+                    <p style="font-size: 0.95rem; margin-bottom: 0.8rem;">2️⃣ 아래 명령어 복사 & 붙여넣기:</p>
+                    <div style="background: var(--dark); color: var(--success); padding: 1rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; overflow-x: auto;">
+                        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                    </div>
+                    <p style="font-size: 0.95rem; margin-top: 0.8rem;">3️⃣ 비밀번호 입력 → Enter → 완료까지 대기</p>
+                </div>
+            </div>
+            <div class="card animate animate-delay-2" style="margin-top: 1.5rem; max-width: 1100px; background: var(--light);">
+                <h3 style="color: var(--primary); margin-bottom: 0.8rem;">✅ 설치 확인</h3>
+                <div style="display: flex; gap: 2rem; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <div style="background: var(--dark); color: var(--success); padding: 0.8rem 1.5rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace;">
+                        brew --version <span style="color: var(--gray);">→ Homebrew 4.x.x</span>
+                    </div>
+                    <span style="color: var(--success); font-weight: 600;">✓ 이 메시지가 나오면 성공!</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 20: Node.js 설치 -->
+        <div class="slide slide-content" id="slide-20">
+            <h2>Node.js 설치하기</h2>
+            <p style="margin-bottom: 1.5rem;">CLI 도구 설치를 위한 필수 사전 준비</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="text-align: left; border: 3px solid var(--success);">
+                    <h3 style="color: var(--success); margin-bottom: 1rem;">🍎 macOS 설치</h3>
+                    <div style="background: var(--dark); color: var(--success); padding: 1rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 1rem;">
+                        <p style="color: var(--gray); margin-bottom: 0.5rem;"># Homebrew로 설치 (권장)</p>
+                        <p style="color: var(--success);">brew install node</p>
+                        <p style="color: var(--gray); margin-top: 1rem; margin-bottom: 0.5rem;"># 또는 공식 사이트에서 다운로드</p>
+                        <p style="color: var(--warning);">nodejs.org → LTS 버전 다운로드</p>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--gray);">Homebrew 없으면: <code style="background: var(--light); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">brew.sh</code> 에서 설치</p>
+                </div>
+                <div class="card" style="text-align: left; border: 3px solid var(--vscode);">
+                    <h3 style="color: var(--vscode); margin-bottom: 1rem;">🪟 Windows 설치</h3>
+                    <div style="background: var(--dark); color: white; padding: 1rem; border-radius: 8px; font-size: 0.9rem; margin-bottom: 1rem;">
+                        <p style="margin-bottom: 0.8rem;">1️⃣ <strong style="color: var(--success);">nodejs.org</strong> 접속</p>
+                        <p style="margin-bottom: 0.8rem;">2️⃣ <strong style="color: var(--warning);">LTS 버전</strong> 다운로드 클릭</p>
+                        <p style="margin-bottom: 0.8rem;">3️⃣ 설치 파일 실행 → Next 클릭</p>
+                        <p>4️⃣ 설치 완료!</p>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--success);">✅ npm이 자동으로 함께 설치됨</p>
+                    <p style="font-size: 0.85rem; color: var(--warning); margin-top: 0.5rem;">⚡ 설치 확인은 <strong>PowerShell</strong>에서 실행하세요!</p>
+                </div>
+            </div>
+            <div class="card animate animate-delay-2" style="margin-top: 1.5rem; max-width: 1100px; background: var(--light);">
+                <h3 style="color: var(--primary); margin-bottom: 0.8rem;">✅ 설치 확인 방법</h3>
+                <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
+                    <div style="background: var(--dark); color: var(--success); padding: 0.8rem 1.5rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace;">
+                        node --version <span style="color: var(--gray);">→ v20.x.x</span>
+                    </div>
+                    <div style="background: var(--dark); color: var(--success); padding: 0.8rem 1.5rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace;">
+                        npm --version <span style="color: var(--gray);">→ 10.x.x</span>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem; padding: 1rem; background: rgba(255, 193, 7, 0.1); border: 1px solid var(--warning); border-radius: 8px;">
+                    <p style="color: var(--warning); font-weight: 600; margin-bottom: 0.5rem;">🪟 Windows에서 오류가 발생한다면?</p>
+                    <p style="font-size: 0.9rem; color: var(--gray); margin-bottom: 0.8rem;">PowerShell에서 스크립트 실행이 차단되어 있을 수 있습니다. 아래 명령어를 먼저 실행하세요:</p>
+                    <div style="background: var(--dark); color: var(--warning); padding: 0.8rem 1rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--gray); margin-top: 0.8rem;">💡 <strong>이유</strong>: Windows는 보안상 기본적으로 스크립트 실행을 막아둡니다. 이 명령어는 <strong>현재 사용자</strong>에 한해 신뢰할 수 있는 스크립트 실행을 허용합니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 21: Gemini CLI 설치 -->
+        <div class="slide slide-content" id="slide-21">
+            <h2 style="color: var(--google);">Gemini CLI 설치하기</h2>
+            <p style="margin-bottom: 1.5rem;">터미널에서 한 줄 명령어로 설치 완료 · <strong style="color: var(--success);">무료!</strong></p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="text-align: left; border: 3px solid var(--google);">
+                    <h3 style="color: var(--google); margin-bottom: 1rem;">🔵 Gemini CLI 설치</h3>
+                    <div style="background: var(--dark); color: var(--success); padding: 1rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; margin-bottom: 1rem;">
+                        <p style="color: var(--warning); margin-bottom: 0.5rem;"># 🍎 macOS / 🪟 Windows 공통</p>
+                        <p style="color: var(--success);">npm install -g @google/gemini-cli</p>
+                        <p style="color: var(--gray); margin-top: 1rem; margin-bottom: 0.5rem;"># 설치 확인</p>
+                        <p style="color: var(--success);">gemini --version</p>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--success);">✅ 무료 사용 가능!</p>
+                </div>
+                <div class="card" style="text-align: left; background: var(--light);">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">💡 왜 Gemini CLI인가?</h3>
+                    <ul style="padding-left: 1.2rem; font-size: 1rem; line-height: 2;">
+                        <li><strong>무료</strong>: 터미널에서 CLI로 사용하면 무료</li>
+                        <li><strong>빠름</strong>: 응답 속도가 빠름</li>
+                        <li><strong>쉬움</strong>: Google 계정만 있으면 OK</li>
+                        <li><strong>에이전트 LLM</strong>: 에이전트의 두뇌로 사용</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem; background: var(--warning); color: var(--dark);">
+                💡 <strong>사전 준비</strong>: Node.js가 설치되어 있어야 합니다 → <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px;">node --version</code> 으로 확인
+            </div>
+        </div>
+
+        <!-- Slide 22: API 키 발급 방법 -->
+        <div class="slide slide-content" id="slide-22">
+            <h2>Gemini API 키 발급받기</h2>
+            <p style="margin-bottom: 1.5rem;">Gemini CLI는 <strong style="color: var(--success);">무료</strong>지만, 인증을 위해 API 키가 필요합니다</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="text-align: left; border: 3px solid var(--google);">
+                    <h3 style="color: var(--google); margin-bottom: 1rem;">🔵 Google API 키 발급 방법</h3>
+                    <ol style="padding-left: 1.2rem; font-size: 1rem; line-height: 2;">
+                        <li><strong>aistudio.google.com</strong> 접속</li>
+                        <li>Google 계정으로 로그인</li>
+                        <li><strong>Get API Key</strong> 클릭</li>
+                        <li><strong>Create API Key</strong> 클릭</li>
+                        <li>프로젝트 선택 (없으면 생성)</li>
+                        <li><span style="color: var(--danger);">⚠️ 키 복사 (한 번만 표시!)</span></li>
+                    </ol>
+                </div>
+                <div class="card" style="text-align: left; background: var(--light);">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">💡 왜 API 키가 필요할까?</h3>
+                    <ul style="padding-left: 1.2rem; font-size: 1rem; line-height: 2;">
+                        <li><strong>일반 API</strong>: 토큰 사용량에 따라 <span style="color: var(--danger);">과금</span></li>
+                        <li><strong>Gemini CLI</strong>: 터미널에서 사용하면 <span style="color: var(--success);"><strong>무료!</strong></span></li>
+                        <li>무료지만 인증은 필요 → API 키 발급</li>
+                        <li>에이전트의 LLM으로 Gemini 사용</li>
+                    </ul>
+                    <p style="font-size: 0.9rem; color: var(--success); margin-top: 1rem; font-weight: 600;">✅ CLI로 쓰면 무료니까 걱정 마세요!</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                🔐 API 키는 <strong>비밀번호</strong>와 같습니다. 절대 다른 사람에게 공유하지 마세요!
+            </div>
+        </div>
+
+        <!-- Slide 23: 터미널에서 API 키 설정 -->
+        <div class="slide slide-content" id="slide-23">
+            <h2>터미널에서 API 키 설정</h2>
+            <p style="margin-bottom: 1.5rem;">환경변수로 API 키를 저장하면 매번 입력할 필요가 없습니다</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="text-align: left; border: 3px solid var(--success);">
+                    <h3 style="color: var(--success); margin-bottom: 1rem;">🍎 macOS 설정</h3>
+                    <div style="background: var(--dark); color: var(--success); padding: 1rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;">
+                        <p style="color: var(--gray);"># .zshrc 파일에 영구 저장</p>
+                        <p>echo 'export GEMINI_API_KEY="AIza..."' >> ~/.zshrc</p>
+                        <p style="color: var(--gray); margin-top: 0.8rem;"># 설정 적용</p>
+                        <p>source ~/.zshrc</p>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--gray); margin-top: 0.8rem;">✅ 확인: <code style="background: var(--light); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">echo $GEMINI_API_KEY</code></p>
+                </div>
+                <div class="card" style="text-align: left; border: 3px solid var(--vscode);">
+                    <h3 style="color: var(--vscode); margin-bottom: 1rem;">🪟 Windows 설정</h3>
+                    <div style="background: var(--dark); color: white; padding: 1rem; border-radius: 8px; font-size: 0.85rem;">
+                        <p style="margin-bottom: 0.6rem;">1️⃣ <strong style="color: var(--warning);">Win + R</strong> → <code style="color: var(--success);">sysdm.cpl</code> 입력</p>
+                        <p style="margin-bottom: 0.6rem;">2️⃣ <strong>고급</strong> 탭 → <strong style="color: var(--success);">환경 변수</strong> 클릭</p>
+                        <p style="margin-bottom: 0.6rem;">3️⃣ 사용자 변수에서 <strong>새로 만들기</strong></p>
+                        <p style="margin-bottom: 0.3rem;">4️⃣ 변수 이름: <code style="color: var(--success);">GEMINI_API_KEY</code></p>
+                        <p>　 변수 값: <code style="color: var(--warning);">AIza...</code></p>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--gray); margin-top: 0.8rem;">✅ 확인: <code style="background: var(--light); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem;">echo %GEMINI_API_KEY%</code></p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem; background: var(--warning); color: var(--dark);">
+                💡 <strong>Windows PowerShell에서</strong>: <code style="background: rgba(0,0,0,0.1); padding: 2px 8px; border-radius: 4px;">$env:GEMINI_API_KEY</code> 로 확인 가능!
+            </div>
+        </div>
+
+        <!-- Slide 24: VS Code 설정 -->
+        <div class="slide slide-content" id="slide-24">
+            <h2 style="color: var(--vscode);">VS Code에서 CLI 설정하기</h2>
+            <p style="margin-bottom: 1.5rem;">VS Code 터미널에서 바로 AI 코딩 도구 사용</p>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="text-align: left;">
+                    <h3 style="color: var(--vscode); margin-bottom: 0.8rem;">1️⃣ 터미널 열기</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">단축키 (macOS/Windows 동일):</p>
+                    <div style="background: var(--dark); color: white; padding: 0.8rem; border-radius: 8px; text-align: center; font-family: 'JetBrains Mono', monospace;">
+                        <span style="background: var(--gray); padding: 4px 8px; border-radius: 4px;">Ctrl</span> + <span style="background: var(--gray); padding: 4px 8px; border-radius: 4px;">`</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--gray); margin-top: 0.8rem;">또는 메뉴 → 터미널 → 새 터미널</p>
+                </div>
+                <div class="card" style="text-align: left;">
+                    <h3 style="color: var(--vscode); margin-bottom: 0.8rem;">2️⃣ 환경변수 확인</h3>
+                    <div style="background: var(--dark); color: var(--success); padding: 0.8rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;">
+                        <p style="color: var(--gray);">🍎 macOS:</p>
+                        <p>echo $GEMINI_API_KEY</p>
+                        <p style="color: var(--gray); margin-top: 0.5rem;">🪟 Windows (PowerShell):</p>
+                        <p>$env:GEMINI_API_KEY</p>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--gray); margin-top: 0.8rem;">키 값이 출력되면 준비 완료!</p>
+                </div>
+                <div class="card" style="text-align: left; border: 2px solid var(--success);">
+                    <h3 style="color: var(--success); margin-bottom: 0.8rem;">3️⃣ Gemini CLI 실행</h3>
+                    <div style="background: var(--dark); color: var(--success); padding: 0.8rem; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                        <p style="color: var(--gray);"># Gemini CLI 실행</p>
+                        <p>gemini</p>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--success); margin-top: 0.8rem;">🎉 AI와 대화 시작!</p>
+                    <p style="font-size: 0.8rem; color: var(--gray); margin-top: 0.3rem;">무료로 사용 가능!</p>
+                </div>
+            </div>
+            <div class="card animate animate-delay-2" style="margin-top: 1.5rem; max-width: 1100px; text-align: left; background: var(--light);">
+                <h3 style="color: var(--vscode); margin-bottom: 0.8rem;">📦 추천 VS Code 확장 프로그램</h3>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <span style="background: var(--vscode); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">Markdown Preview Enhanced</span>
+                    <span style="background: var(--primary); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">Error Lens</span>
+                    <span style="background: var(--secondary); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">Material Icon Theme</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 개념 정리: PART 2 (Slide 25) -->
+        <div class="slide slide-dark" id="slide-25">
+            <div style="font-size: 1.2rem; color: var(--primary-light); margin-bottom: 1rem;">📌 PART 2 정리</div>
+            <h2 style="color: white; margin-bottom: 2rem;">환경 구축 핵심</h2>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1000px;">
+                <div style="padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.8rem;">💻</div>
+                    <h3 style="color: var(--vscode); margin-bottom: 0.5rem;">VS Code</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">무료 코드 편집기<br>터미널 내장</p>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.8rem;">🤖</div>
+                    <h3 style="color: var(--google); margin-bottom: 0.5rem;">Gemini CLI</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">무료 AI 코딩 도구<br>자연어로 코딩</p>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.8rem;">📁</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.5rem;">파일 시스템</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">정리된 폴더 구조<br>Markdown 파일</p>
+                </div>
+            </div>
+            <div class="animate animate-delay-2" style="margin-top: 1.5rem; padding: 1rem 2rem; background: var(--ax); border-radius: 10px;">
+                <p style="color: white; font-size: 1.1rem; margin: 0;">💡 핵심: <strong>코드 편집기</strong> + <strong>AI 코딩 도구</strong> + <strong>정리된 파일</strong> = AI와 효율적인 협업</p>
+            </div>
+            <!-- 퀴즈 섹션 -->
+            <div class="animate animate-delay-3" style="margin-top: 1.5rem; max-width: 800px;">
+                <div style="background: rgba(255,255,255,0.05); border: 2px solid var(--warning); border-radius: 12px; padding: 1.2rem;">
+                    <p style="color: var(--warning); font-weight: 600; margin-bottom: 1rem; font-size: 1rem;">🧠 퀴즈: AI 코딩 도구(CLI)를 설치하려면 무엇이 먼저 필요할까요?</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">A. Python</button>
+                        <button onclick="this.style.background='var(--success)'; this.style.color='white'; document.getElementById('answer2').style.display='block';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">B. Node.js</button>
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">C. Java</button>
+                    </div>
+                    <p id="answer2" style="display: none; margin-top: 1rem; color: var(--success); font-size: 0.95rem;">✅ 정답! <strong>Node.js</strong>가 있어야 npm으로 CLI 도구를 설치할 수 있습니다.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PART 3: AI 에이전트 이해 ==================== -->
+
+        <!-- Slide 26: Part 3 시작 -->
+        <div class="slide slide-ax" id="slide-26">
+            <span class="part-number">03</span>
+            <div class="badge">PART 3</div>
+            <h1>AI 에이전트 이해</h1>
+            <p class="subtitle">스스로 생각하고 행동하는 AI</p>
+        </div>
+
+        <!-- Slide 27: AI 에이전트란? -->
+        <div class="slide slide-content" id="slide-27">
+            <h2>AI 에이전트란?</h2>
+            <div class="grid-2" style="max-width: 1000px; margin-bottom: 1.5rem;">
+                <div class="card animate animate-delay-1" style="text-align: left;">
+                    <h3 style="color: var(--ax); margin-bottom: 0.8rem;">📚 어원</h3>
+                    <p style="font-size: 1rem; margin-bottom: 0.5rem;"><strong>Agent</strong> = 라틴어 "agere" (행동하다)</p>
+                    <p style="font-size: 1rem; color: var(--gray);">→ "대리인", "스스로 행동하는 자"</p>
+                </div>
+                <div class="card animate animate-delay-2" style="text-align: left;">
+                    <h3 style="color: var(--primary); margin-bottom: 0.8rem;">🤖 AI 분야에서</h3>
+                    <p style="font-size: 1rem; margin-bottom: 0.5rem;"><strong>Intelligent Agent</strong> (지능형 에이전트)</p>
+                    <p style="font-size: 1rem; color: var(--gray);">→ 환경 인식 → 판단 → 행동하는 시스템</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-3">
+                "스스로 생각하고, 판단하고, 행동하는 AI 프로그램"
+            </div>
+            <div class="grid-3" style="margin-top: 1.5rem;">
+                <div class="card animate animate-delay-4">
+                    <div class="card-icon">📧</div>
+                    <h3>이메일 자동 분류</h3>
+                    <p>중요도 판단 후 자동 정리</p>
+                </div>
+                <div class="card animate animate-delay-4">
+                    <div class="card-icon">📅</div>
+                    <h3>일정 자동 조율</h3>
+                    <p>참석자 시간 맞춰 예약</p>
+                </div>
+                <div class="card card-primary animate animate-delay-4">
+                    <div class="card-icon">✍️</div>
+                    <h3>광고 카피 생성</h3>
+                    <p>오늘 배울 것!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 28: 에이전트 vs 챗봇 -->
+        <div class="slide slide-content" id="slide-28">
+            <h2>에이전트 vs 챗봇</h2>
+            <p style="margin-bottom: 2rem;">무엇이 다른가요?</p>
+            <div class="comparison">
+                <div class="comparison-item animate animate-delay-1">
+                    <h3>💬 챗봇 (ChatGPT)</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0; text-align: left;">
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--dark);">• 질문하면 답변만 함</li>
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--dark);">• 한 번에 하나의 작업</li>
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem; color: var(--dark);">• 사람이 계속 지시해야 함</li>
+                        <li style="font-size: 1.1rem; color: var(--dark);"><strong>수동적</strong> 🐢</li>
+                    </ul>
+                </div>
+                <div class="comparison-item highlight-item animate animate-delay-2">
+                    <div class="comparison-badge">추천!</div>
+                    <h3>🤖 에이전트</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0; text-align: left;">
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem;">✓ 목표 주면 알아서 실행</li>
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem;">✓ 여러 단계를 자동 수행</li>
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem;">✓ 실패하면 스스로 재시도</li>
+                        <li style="font-size: 1.1rem;"><strong>능동적</strong> 🚀</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 29: 에이전트 vs 챗봇 상세 비교 -->
+        <div class="slide slide-content" id="slide-29">
+            <h2>🔍 에이전트 vs 챗봇 상세 비교</h2>
+            <div class="animate animate-delay-1" style="overflow-x: auto; margin: 1.5rem 0;">
+                <table style="width: 100%; max-width: 1000px; margin: 0 auto; border-collapse: collapse; font-size: 0.95rem;">
+                    <thead>
+                        <tr style="background: var(--primary); color: white;">
+                            <th style="padding: 1rem; text-align: left; border: 1px solid var(--primary);">구분</th>
+                            <th style="padding: 1rem; text-align: center; border: 1px solid var(--primary);">💬 챗봇</th>
+                            <th style="padding: 1rem; text-align: center; border: 1px solid var(--primary);">🤖 에이전트</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; font-weight: 600;">실행 방식</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center;">1회 질문 → 1회 응답</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center; background: #e8f5e9;">목표 설정 → 다단계 실행</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; font-weight: 600;">도구 사용</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center;">없음</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center; background: #e8f5e9;">파일 읽기/쓰기, API 호출, 코드 실행</td>
+                        </tr>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; font-weight: 600;">상태 관리</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center;">대화 컨텍스트만 유지</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center; background: #e8f5e9;">작업 상태, 중간 결과 저장</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; font-weight: 600;">실패 대응</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center;">사용자가 다시 질문</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center; background: #e8f5e9;">자동 재시도, 대안 탐색</td>
+                        </tr>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; font-weight: 600;">예시</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center;">ChatGPT 웹 채팅</td>
+                            <td style="padding: 0.8rem; border: 1px solid #ddd; text-align: center; background: #e8f5e9;">Claude Code, AutoGPT</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="animate animate-delay-2" style="margin-top: 1.5rem;">
+                <h3 style="color: var(--secondary); margin-bottom: 1rem;">📈 Agentic AI 트렌드 (2024~2025)</h3>
+                <div class="grid-3" style="max-width: 900px; margin: 0 auto;">
+                    <div class="card" style="padding: 1rem; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">2024</div>
+                        <div style="font-size: 0.85rem;">에이전트 프레임워크 등장<br><strong>LangChain, CrewAI, AutoGen</strong></div>
+                    </div>
+                    <div class="card" style="padding: 1rem; text-align: center; background: var(--primary); color: white;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">2025</div>
+                        <div style="font-size: 0.85rem;">에이전트 IDE 등장<br><strong>Cursor, Antigravity, Windsurf</strong></div>
+                    </div>
+                    <div class="card" style="padding: 1rem; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎯</div>
+                        <div style="font-size: 0.85rem;">핵심 변화<br><strong>"질문" → "작업 위임"</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 30: 바이브 코딩이란? -->
+        <div class="slide slide-content" id="slide-30">
+            <div class="emoji-large">💬</div>
+            <h2>바이브 코딩이란?</h2>
+            <div class="highlight-box animate animate-delay-1">
+                "코드를 직접 쓰지 않고, AI와 대화하며 프로그램을 만드는 방식"
+            </div>
+            <div class="flow animate animate-delay-2">
+                <div class="flow-item">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">💡</div>
+                    <div>아이디어</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">한글로 설명</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item" style="background: var(--secondary);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">💬</div>
+                    <div>AI와 대화</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">프롬프트</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item" style="background: var(--success);">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">💻</div>
+                    <div>코드 완성</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8;">자동 생성</div>
+                </div>
+            </div>
+            <p class="animate animate-delay-3" style="margin-top: 2rem; font-weight: 600; color: var(--primary);">
+                "코딩을 몰라도 개발자가 될 수 있다"
+            </p>
+        </div>
+
+        <!-- Slide 31: INPUT-PROCESS-OUTPUT -->
+        <div class="slide slide-content" id="slide-31">
+            <h2>🔑 프로그램의 핵심 원리</h2>
+            <p style="margin-bottom: 1.5rem;">모든 프로그램과 에이전트는 이 구조를 따릅니다</p>
+            <div class="flow animate animate-delay-1" style="margin: 2rem 0;">
+                <div class="flow-item" style="min-width: 180px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📥</div>
+                    <div style="font-size: 1.3rem; font-weight: 600;">입력</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Input</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item" style="background: var(--secondary); min-width: 180px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⚙️</div>
+                    <div style="font-size: 1.3rem; font-weight: 600;">처리</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Process</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item" style="background: var(--success); min-width: 180px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📤</div>
+                    <div style="font-size: 1.3rem; font-weight: 600;">출력</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Output</div>
+                </div>
+            </div>
+            <div class="grid-3 animate animate-delay-2" style="max-width: 1000px; margin-top: 1rem;">
+                <div class="card" style="padding: 1.5rem;">
+                    <h3 style="color: var(--primary);">📥 입력 정의</h3>
+                    <p style="font-size: 0.95rem;">무엇을 받을 것인가?<br>(제품 정보, 타겟 고객 등)</p>
+                </div>
+                <div class="card" style="padding: 1.5rem;">
+                    <h3 style="color: var(--secondary);">⚙️ 처리 로직</h3>
+                    <p style="font-size: 0.95rem;">어떻게 변환할 것인가?<br>(AI가 카피 생성)</p>
+                </div>
+                <div class="card" style="padding: 1.5rem;">
+                    <h3 style="color: var(--success);">📤 출력 형태</h3>
+                    <p style="font-size: 0.95rem;">무엇을 만들 것인가?<br>(광고 카피, 스크립트)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 개념 정리: PART 3 -->
+        <div class="slide slide-dark" id="slide-32">
+            <div style="font-size: 1.2rem; color: var(--primary-light); margin-bottom: 1rem;">📌 PART 3 정리</div>
+            <h2 style="color: white; margin-bottom: 2rem;">AI 에이전트 핵심</h2>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1000px;">
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🤖</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.5rem;">Agent란?</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.95rem;">스스로 판단하고<br>행동하는 AI</p>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🎯</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.5rem;">목표 지향</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.95rem;">주어진 목표를<br>달성하기 위해 행동</p>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">📥📤</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.5rem;">입력 → 출력</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.95rem;">정해진 입력으로<br>원하는 결과물 생성</p>
+                </div>
+            </div>
+            <div class="animate animate-delay-2" style="margin-top: 1.5rem; padding: 1rem 2rem; background: var(--ax); border-radius: 10px;">
+                <p style="color: white; font-size: 1.1rem; margin: 0;">💡 핵심: 에이전트 = <strong>"목표만 주면 스스로 방법을 찾아 실행하는 AI"</strong></p>
+            </div>
+            <!-- 퀴즈 섹션 -->
+            <div class="animate animate-delay-3" style="margin-top: 1.5rem; max-width: 800px;">
+                <div style="background: rgba(255,255,255,0.05); border: 2px solid var(--warning); border-radius: 12px; padding: 1.2rem;">
+                    <p style="color: var(--warning); font-weight: 600; margin-bottom: 1rem; font-size: 1rem;">🧠 퀴즈: AI 에이전트의 핵심 특징은?</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">A. 시킨 것만 정확히 수행</button>
+                        <button onclick="this.style.background='var(--success)'; this.style.color='white'; document.getElementById('answer3').style.display='block';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">B. 목표를 주면 스스로 방법을 찾아 실행</button>
+                    </div>
+                    <p id="answer3" style="display: none; margin-top: 1rem; color: var(--success); font-size: 0.95rem;">✅ 정답! 에이전트는 <strong>목표만 주면 스스로 판단하고 행동</strong>합니다. 일반 AI와의 핵심 차이점이에요.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PART 4: 에이전트 작동 원리 ==================== -->
+
+        <!-- Slide 33: Part 4 시작 -->
+        <div class="slide slide-section" id="slide-33">
+            <span class="part-number">04</span>
+            <div class="badge">PART 4</div>
+            <h1>에이전트 작동 원리</h1>
+            <p class="subtitle">광고 카피 에이전트로 배우기</p>
+        </div>
+
+        <!-- Slide 34: 광고 카피 에이전트 소개 -->
+        <div class="slide slide-content" id="slide-34">
+            <h2>광고 카피 에이전트가 하는 일</h2>
+            <div class="flow animate animate-delay-1" style="margin: 2rem 0;">
+                <div class="flow-item" style="background: var(--light); min-width: 200px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
+                    <div style="font-weight: 600; color: var(--dark);">입력</div>
+                    <div style="font-size: 0.9rem; color: var(--gray);">제품 정보</div>
+                    <div style="font-size: 0.9rem; color: var(--gray);">타겟 고객</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item" style="min-width: 200px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤖</div>
+                    <div>AI 에이전트</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">자동 생성 + 평가</div>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-item" style="background: var(--success); min-width: 200px;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✨</div>
+                    <div>출력</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">이미지 카피 3개</div>
+                    <div style="font-size: 0.9rem; opacity: 0.8;">숏폼 스크립트 3개</div>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2">
+                한 번의 입력으로 <span style="color: var(--warning);">6개</span>의 고품질 광고 소재 생성
+            </div>
+        </div>
+
+        <!-- Slide 35: 6단계 워크플로우 -->
+        <div class="slide slide-content" id="slide-35">
+            <h2>6단계 자동화 워크플로우</h2>
+            <div class="timeline animate animate-delay-1">
+                <div class="timeline-item">
+                    <div class="timeline-number">1</div>
+                    <h4>입력 로드</h4>
+                    <p>input.md 읽기</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number">2</div>
+                    <h4>USP 추출</h4>
+                    <p>차별점 분석</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number">3</div>
+                    <h4>카피 생성</h4>
+                    <p>초안 작성</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number">4</div>
+                    <h4>품질 평가</h4>
+                    <p>점수 산정</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number">5</div>
+                    <h4>시뮬레이션</h4>
+                    <p>타겟 반응 예측</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number" style="background: var(--success);">6</div>
+                    <h4>최종 출력</h4>
+                    <p>final.md 저장</p>
+                </div>
+            </div>
+            <p class="animate animate-delay-2" style="margin-top: 1rem; color: var(--gray);">
+                ⚡ 전 과정이 <strong>자동화</strong>되어 있습니다
+            </p>
+        </div>
+
+        <!-- Slide 36: 프로젝트 파일 구조 (NEW) -->
+        <div class="slide slide-content" id="slide-36">
+            <h2>📁 파일로 관리하는 에이전트</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">UI 없이 파일과 터미널로 동작합니다</p>
+            <div class="grid-2" style="max-width: 1100px; gap: 1.5rem;">
+                <div class="animate animate-delay-1">
+                    <h4 style="color: var(--primary); margin-bottom: 0.5rem;">🗂️ 전체 프로젝트 구조</h4>
+                    <div style="background: var(--dark); padding: 1rem; border-radius: 10px; text-align: left; font-family: 'Courier New', monospace; font-size: 0.7rem; line-height: 1.5;">
+                        <p style="color: var(--primary-light);">2026 DA Agent/</p>
+                        <p style="color: #aaa; margin-left: 1rem;">├── <span style="color: #ff8888;">src/</span> <span style="color: #666;">← 소스 코드</span></p>
+                        <p style="color: #aaa; margin-left: 2rem;">├── agent/ <span style="color: #666;">← 에이전트 로직</span></p>
+                        <p style="color: #aaa; margin-left: 2rem;">└── core/ <span style="color: #666;">← 프롬프트, 유틸</span></p>
+                        <p style="color: #aaa; margin-left: 1rem;">├── <span style="color: #88ff88;">workspace/</span> <span style="color: #666;">← 작업 공간</span></p>
+                        <p style="color: #aaa; margin-left: 2rem;">├── <span style="color: #ffcc00;">campaigns/</span> <span style="color: #666;">← 캠페인별 폴더</span></p>
+                        <p style="color: #aaa; margin-left: 2rem;">├── products/ <span style="color: #666;">← 제품 정보</span></p>
+                        <p style="color: #aaa; margin-left: 2rem;">└── targets/ <span style="color: #666;">← 타겟 정보</span></p>
+                        <p style="color: #aaa; margin-left: 1rem;">└── <span style="color: #88ccff;">config/</span> <span style="color: #666;">← 설정 파일</span></p>
+                    </div>
+                </div>
+                <div class="animate animate-delay-2">
+                    <h4 style="color: var(--success); margin-bottom: 0.5rem;">📂 캠페인 폴더 상세</h4>
+                    <div style="background: var(--dark); padding: 1rem; border-radius: 10px; text-align: left; font-family: 'Courier New', monospace; font-size: 0.7rem; line-height: 1.5;">
+                        <p style="color: var(--primary-light);">campaigns/2026-01-15-my-campaign/</p>
+                        <p style="color: #aaa; margin-left: 1rem;">├── <span style="color: #ffcc00;">input.md</span> <span style="color: #666;">← 사용자 입력</span></p>
+                        <p style="color: #aaa; margin-left: 1rem;">├── <span style="color: #88ccff;">usps.json</span> <span style="color: #666;">← USP 추출</span></p>
+                        <p style="color: #aaa; margin-left: 1rem;">├── <span style="color: #88ff88;">draft-v1.md</span> <span style="color: #666;">← 초안</span></p>
+                        <p style="color: #aaa; margin-left: 1rem;">├── <span style="color: #ffaa88;">eval-*.md</span> <span style="color: #666;">← 평가 결과</span></p>
+                        <p style="color: #aaa; margin-left: 1rem;">└── <span style="color: #66ff66; font-weight: bold;">final.md</span> <span style="color: #666;">← 최종 결과</span></p>
+                    </div>
+                    <div style="margin-top: 0.8rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <span style="background: var(--warning); color: var(--dark); padding: 0.3rem 0.6rem; border-radius: 5px; font-size: 0.75rem;">📥 input = 사용자</span>
+                        <span style="background: var(--success); color: white; padding: 0.3rem 0.6rem; border-radius: 5px; font-size: 0.75rem;">📤 나머지 = AI</span>
+                    </div>
+                </div>
+            </div>
+            <div class="animate animate-delay-3" style="margin-top: 1rem; padding: 0.8rem; background: var(--ax); border-radius: 10px;">
+                <p style="color: white; margin: 0; font-size: 0.95rem;">💡 웹사이트나 앱 없이 <strong>터미널 명령어 한 줄</strong>로 에이전트 실행!</p>
+            </div>
+        </div>
+
+        <!-- Slide 37: 파일 기반 에이전트의 장점 (NEW) -->
+        <div class="slide slide-content" id="slide-37">
+            <h2>✅ 왜 파일로 관리할까?</h2>
+            <p style="margin-bottom: 2rem; color: var(--gray);">복잡한 앱 대신 단순한 파일이 더 좋은 이유</p>
+            <div class="grid-3" style="max-width: 1100px; gap: 1.5rem;">
+                <div class="card animate animate-delay-1" style="padding: 1.5rem; border-top: 4px solid var(--success);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">📁</div>
+                    <h3 style="color: var(--success); margin-bottom: 0.8rem;">내 컴퓨터에 저장</h3>
+                    <p style="font-size: 0.95rem; color: var(--gray); line-height: 1.7;">
+                        클라우드 의존 없이<br>
+                        <strong>내 폴더에서 직접 관리</strong><br>
+                        인터넷 없어도 확인 가능
+                    </p>
+                </div>
+                <div class="card animate animate-delay-2" style="padding: 1.5rem; border-top: 4px solid var(--warning);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🔧</div>
+                    <h3 style="color: var(--warning); margin-bottom: 0.8rem;">수정이 간단</h3>
+                    <p style="font-size: 0.95rem; color: var(--gray); line-height: 1.7;">
+                        문제 있으면 파일 열어서<br>
+                        <strong>프롬프트만 고치면 끝</strong><br>
+                        복잡한 설정 불필요
+                    </p>
+                </div>
+                <div class="card animate animate-delay-3" style="padding: 1.5rem; border-top: 4px solid var(--primary);">
+                    <div style="font-size: 2.5rem; margin-bottom: 0.8rem;">🔄</div>
+                    <h3 style="color: var(--primary); margin-bottom: 0.8rem;">공유 & 백업</h3>
+                    <p style="font-size: 0.95rem; color: var(--gray); line-height: 1.7;">
+                        폴더 복사로 공유 완료<br>
+                        <strong>Git으로 버전 관리</strong><br>
+                        언제든 이전 상태로 복원
+                    </p>
+                </div>
+            </div>
+            <div class="animate animate-delay-4" style="margin-top: 2rem; padding: 1rem 1.5rem; background: var(--light); border-radius: 12px; max-width: 800px;">
+                <p style="margin: 0; font-size: 1.1rem;">💡 <strong>핵심</strong>: 파일이니까 <span style="color: var(--success);">눈에 보이고</span>, <span style="color: var(--warning);">손으로 고치고</span>, <span style="color: var(--primary);">쉽게 옮긴다</span></p>
+            </div>
+        </div>
+
+        <!-- Slide 38: 입출력 예시 (NEW) -->
+        <div class="slide slide-content" id="slide-38">
+            <h2>📝 입력과 출력 예시</h2>
+            <div class="grid-2" style="max-width: 1100px; gap: 1.5rem;">
+                <div class="animate animate-delay-1">
+                    <div style="background: var(--light); padding: 1.2rem; border-radius: 15px; text-align: left;">
+                        <h4 style="color: var(--warning); margin-bottom: 0.8rem;">📥 input.md (입력)</h4>
+                        <div style="background: white; padding: 1rem; border-radius: 10px; font-family: 'Courier New', monospace; font-size: 0.8rem; line-height: 1.6;">
+                            <p style="color: var(--gray);"># 캠페인 정보</p>
+                            <p><strong>제품:</strong> 아이펠 AI 부트캠프</p>
+                            <p><strong>타겟:</strong> 비전공자 취준생</p>
+                            <p><strong>채널:</strong> Instagram</p>
+                            <p style="margin-top: 0.5rem; color: var(--gray);"># 강조 포인트</p>
+                            <p>• 수료율 88%</p>
+                            <p>• 비전공자 환영</p>
+                            <p>• 실무 프로젝트</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="animate animate-delay-2">
+                    <div style="background: var(--light); padding: 1.2rem; border-radius: 15px; text-align: left;">
+                        <h4 style="color: var(--success); margin-bottom: 0.8rem;">📤 final.md (출력)</h4>
+                        <div style="background: white; padding: 1rem; border-radius: 10px; font-family: 'Courier New', monospace; font-size: 0.8rem; line-height: 1.6;">
+                            <p style="color: var(--gray);"># 이미지 카피 Top 3</p>
+                            <p><strong>1위 (85점):</strong></p>
+                            <p style="color: var(--primary);">"수포자도 OK! 88%가 증명한..."</p>
+                            <p style="margin-top: 0.8rem; color: var(--gray);"># 숏폼 스크립트 Top 3</p>
+                            <p><strong>1위 (90점):</strong></p>
+                            <p style="color: var(--secondary);">[후킹] 수학 포기했는데...</p>
+                            <p style="color: var(--secondary);">[본문] 엑셀만 쓸 줄 알면...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="animate animate-delay-3" style="margin-top: 1.5rem; color: var(--gray); font-size: 0.95rem;">
+                💡 <strong>input.md</strong> 하나만 작성하면 → AI가 <strong>6개의 광고 소재</strong>를 자동 생성!
+            </p>
+        </div>
+
+        <!-- Slide 39: 2단계 평가 시스템 -->
+        <div class="slide slide-content" id="slide-39">
+            <h2>2단계 품질 보증 시스템</h2>
+            <div class="grid-2" style="max-width: 900px;">
+                <div class="animate animate-delay-1">
+                    <div class="card" style="border: 3px solid var(--primary);">
+                        <div class="card-icon">📊</div>
+                        <h3>1단계: 품질 평가</h3>
+                        <div style="text-align: left; padding: 1rem; font-size: 0.95rem;">
+                            <p style="margin-bottom: 0.5rem;">• 후킹력 (주목도)</p>
+                            <p style="margin-bottom: 0.5rem;">• USP 전달력</p>
+                            <p style="margin-bottom: 0.5rem;">• 타겟 적합도</p>
+                            <p style="margin-bottom: 0.5rem;">• 감정 호소력</p>
+                            <p>• CTA 명확성</p>
+                        </div>
+                        <div style="background: var(--primary); color: white; padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
+                            통과 기준: 70점 이상
+                        </div>
+                    </div>
+                </div>
+                <div class="animate animate-delay-2">
+                    <div class="card" style="border: 3px solid var(--secondary);">
+                        <div class="card-icon">🎭</div>
+                        <h3>2단계: 페르소나 시뮬레이션</h3>
+                        <div style="text-align: left; padding: 1rem; font-size: 0.95rem;">
+                            <p style="margin-bottom: 0.5rem;">• 가상 타겟 고객 생성</p>
+                            <p style="margin-bottom: 0.5rem;">• 광고 반응 시뮬레이션</p>
+                            <p style="margin-bottom: 0.5rem;">• 클릭 확률 예측</p>
+                            <p>• 구매 의향 분석</p>
+                        </div>
+                        <div style="background: var(--secondary); color: white; padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;">
+                            실제 사용자 관점 검증
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="animate animate-delay-3" style="margin-top: 1.5rem; font-weight: 600; color: var(--success);">
+                ✅ 두 단계 모두 통과해야 최종 결과물로 채택
+            </p>
+        </div>
+
+        <!-- Slide 40: 자동 재생성 -->
+        <div class="slide slide-content" id="slide-40">
+            <h2>🔄 실패 시 자동 재생성</h2>
+            <p style="margin-bottom: 1.5rem;">품질 기준 미달 시 에이전트가 자동으로 재시도</p>
+            <div class="animate animate-delay-1" style="background: var(--light); padding: 2rem; border-radius: 20px; max-width: 800px;">
+                <div class="workflow">
+                    <div class="workflow-row">
+                        <div class="workflow-box">📥 입력</div>
+                    </div>
+                    <div class="workflow-arrow-down">↓</div>
+                    <div class="workflow-row">
+                        <div class="workflow-box secondary">🤖 생성</div>
+                    </div>
+                    <div class="workflow-arrow-down">↓</div>
+                    <div class="workflow-row">
+                        <div class="workflow-box warning">📊 평가</div>
+                        <span style="margin: 0 1rem;">→</span>
+                        <span style="color: var(--danger);">실패?</span>
+                        <span style="margin: 0 0.5rem;">→</span>
+                        <span style="color: var(--gray);">🔄 재시도</span>
+                    </div>
+                    <div class="workflow-arrow-down">↓ 통과!</div>
+                    <div class="workflow-row">
+                        <div class="workflow-box success">✅ 출력</div>
+                    </div>
+                </div>
+            </div>
+            <p class="animate animate-delay-2" style="margin-top: 1.5rem; color: var(--gray);">
+                💡 실패하면 자동으로 재생성 → 품질 보장
+            </p>
+        </div>
+
+        <!-- Slide 41: 실제 결과물 예시 -->
+        <div class="slide slide-content" id="slide-41">
+            <h2>✨ 최종 결과물 예시</h2>
+            <div class="grid-2" style="max-width: 1100px;">
+                <div class="card animate animate-delay-1" style="text-align: left;">
+                    <div class="card-icon" style="text-align: center;">📷</div>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">이미지 광고 카피</h3>
+                    <div style="background: var(--dark); color: white; padding: 1rem; border-radius: 10px; margin-bottom: 0.8rem;">
+                        <p style="color: var(--warning); font-size: 0.85rem; margin-bottom: 0.3rem;">메인</p>
+                        <p style="color: white; font-size: 0.95rem;">수포자도 OK! 88%가 증명한 AI 입문 커리큘럼</p>
+                    </div>
+                    <div style="background: var(--light); padding: 1rem; border-radius: 10px;">
+                        <p style="color: var(--gray); font-size: 0.85rem; margin-bottom: 0.3rem;">서브</p>
+                        <p style="font-size: 0.9rem; color: var(--dark);">수학/코딩 지식 없이 시작해도 괜찮아요!</p>
+                    </div>
+                </div>
+                <div class="card animate animate-delay-2" style="text-align: left;">
+                    <div class="card-icon" style="text-align: center;">🎬</div>
+                    <h3 style="text-align: center; margin-bottom: 1rem;">숏폼 스크립트</h3>
+                    <div style="background: var(--danger); padding: 0.7rem; border-radius: 8px; margin-bottom: 0.5rem;">
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.85);">후킹 (0~3초)</p>
+                        <p style="font-size: 0.9rem; color: white;">수학 포기했는데 AI 개발자가 됐다고?!</p>
+                    </div>
+                    <div style="background: var(--primary); padding: 0.7rem; border-radius: 8px; margin-bottom: 0.5rem;">
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.85);">본문 (3~17초)</p>
+                        <p style="font-size: 0.9rem; color: white;">엑셀만 쓸 줄 알면 OK. 88% 비전공자 수료율...</p>
+                    </div>
+                    <div style="background: var(--success); padding: 0.7rem; border-radius: 8px;">
+                        <p style="font-size: 0.8rem; color: rgba(255,255,255,0.85);">CTA (17~22초)</p>
+                        <p style="font-size: 0.9rem; color: white;">지금 바로 아이펠에서 시작하세요!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 개념 정리: PART 4 -->
+        <div class="slide slide-dark" id="slide-42">
+            <div style="font-size: 1.2rem; color: var(--primary-light); margin-bottom: 1rem;">📌 PART 4 정리</div>
+            <h2 style="color: white; margin-bottom: 2rem;">에이전트 작동 원리 핵심</h2>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 900px;">
+                <div style="padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <h3 style="color: var(--warning); margin-bottom: 1rem;">🧩 에이전트 구성요소</h3>
+                    <ul style="list-style: none; padding: 0; color: rgba(255,255,255,0.9); font-size: 0.95rem; line-height: 1.8;">
+                        <li>📝 <strong>프롬프트</strong> - AI에게 주는 지시</li>
+                        <li>🧠 <strong>LLM</strong> - 생각하는 두뇌</li>
+                        <li>🔧 <strong>도구</strong> - 행동할 수 있는 능력</li>
+                        <li>💾 <strong>메모리</strong> - 기억하는 능력</li>
+                    </ul>
+                </div>
+                <div style="padding: 1.5rem; background: rgba(255,255,255,0.1); border-radius: 15px;">
+                    <h3 style="color: var(--warning); margin-bottom: 1rem;">🔄 작동 흐름</h3>
+                    <div style="text-align: center; color: white; font-size: 1.1rem; line-height: 2;">
+                        <p>입력 받기</p>
+                        <p style="color: var(--gray);">↓</p>
+                        <p>LLM이 판단</p>
+                        <p style="color: var(--gray);">↓</p>
+                        <p>도구로 실행</p>
+                        <p style="color: var(--gray);">↓</p>
+                        <p>결과 출력</p>
+                    </div>
+                </div>
+            </div>
+            <div class="animate animate-delay-2" style="margin-top: 1.5rem; padding: 1rem 2rem; background: var(--ax); border-radius: 10px;">
+                <p style="color: white; font-size: 1.1rem; margin: 0;">💡 핵심: <strong>프롬프트로 지시</strong> → <strong>LLM이 판단</strong> → <strong>도구로 행동</strong></p>
+            </div>
+            <!-- 퀴즈 섹션 -->
+            <div class="animate animate-delay-3" style="margin-top: 1.5rem; max-width: 800px;">
+                <div style="background: rgba(255,255,255,0.05); border: 2px solid var(--warning); border-radius: 12px; padding: 1.2rem;">
+                    <p style="color: var(--warning); font-weight: 600; margin-bottom: 1rem; font-size: 1rem;">🧠 퀴즈: 에이전트의 4가지 구성요소가 아닌 것은?</p>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">A. 프롬프트</button>
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">B. LLM</button>
+                        <button onclick="this.style.background='var(--success)'; this.style.color='white'; document.getElementById('answer4').style.display='block';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">C. 데이터베이스</button>
+                        <button onclick="this.style.background='#ff6b6b'; this.style.color='white';" style="padding: 0.6rem 1.2rem; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; transition: all 0.3s;">D. 도구</button>
+                    </div>
+                    <p id="answer4" style="display: none; margin-top: 1rem; color: var(--success); font-size: 0.95rem;">✅ 정답! 에이전트 구성요소는 <strong>프롬프트, LLM, 도구, 메모리</strong>입니다. 데이터베이스는 필수가 아니에요!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PART 5: 에이전트 만들기 ==================== -->
+
+        <!-- Slide 43: Part 5 시작 -->
+        <div class="slide slide-ax" id="slide-43">
+            <span class="part-number">05</span>
+            <div class="badge">PART 5</div>
+            <h1>에이전트 만들기</h1>
+            <p class="subtitle">바이브 코딩으로 나만의 에이전트 제작</p>
+        </div>
+
+        <!-- Slide 44: 4단계 프로세스 -->
+        <div class="slide slide-content" id="slide-44">
+            <h2>에이전트 만들기 - AI와 대화로 완성</h2>
+            <div class="timeline animate animate-delay-1">
+                <div class="timeline-item">
+                    <div class="timeline-number">1</div>
+                    <h4>아이디어</h4>
+                    <p>AI와 대화로 발굴</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number">2</div>
+                    <h4>PRD + 워크플로우</h4>
+                    <p>기획서 + 흐름 설계</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number">3</div>
+                    <h4>프롬프트</h4>
+                    <p>AI에게 설계 요청</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-number" style="background: var(--success);">4</div>
+                    <h4>구현</h4>
+                    <p>AI에게 코드 요청</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                핵심: <span style="color: var(--warning);">내가 직접 만드는 게 아니라, AI에게 요청</span>하는 것!
+            </div>
+        </div>
+
+        <!-- Slide 45: 1단계 - 아이디어 -->
+        <div class="slide slide-content" id="slide-45">
+            <div class="step-indicator">
+                <div class="step active"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+            </div>
+            <h2>1단계: 아이디어 정하기</h2>
+            <p style="margin-bottom: 2rem;">AI와 대화하며 아이디어를 발굴하세요</p>
+            <div class="grid-2" style="max-width: 1000px;">
+                <div class="animate animate-delay-1">
+                    <ol style="list-style: none; padding: 0; text-align: left;">
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem; padding: 1rem; background: var(--light); border-radius: 10px; border-left: 4px solid var(--primary);">
+                            <strong>1.</strong> AI에게 <strong>자기소개</strong>하기<br>
+                            <span style="font-size: 0.9rem; color: var(--gray);">"나는 ~하는 사람이야"</span>
+                        </li>
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem; padding: 1rem; background: var(--light); border-radius: 10px; border-left: 4px solid var(--primary);">
+                            <strong>2.</strong> AI에게 <strong>질문해달라고</strong> 요청<br>
+                            <span style="font-size: 0.9rem; color: var(--gray);">"뭘 만들면 좋을지 질문해줘"</span>
+                        </li>
+                        <li style="font-size: 1.1rem; margin-bottom: 0.8rem; padding: 1rem; background: var(--light); border-radius: 10px; border-left: 4px solid var(--primary);">
+                            <strong>3.</strong> AI 질문에 <strong>답변</strong>하기<br>
+                            <span style="font-size: 0.9rem; color: var(--gray);">답할 수 있는 것만 답하면 OK</span>
+                        </li>
+                        <li style="font-size: 1.1rem; padding: 1rem; background: var(--ax); color: white; border-radius: 10px; border-left: 4px solid var(--secondary);">
+                            <strong>4.</strong> <strong>추천</strong>받고 <strong>수정</strong>하며 확정<br>
+                            <span style="font-size: 0.9rem; opacity: 0.9;">"이건 좀 다르게..." → 반복</span>
+                        </li>
+                    </ol>
+                </div>
+                <div class="card animate animate-delay-2" style="background: var(--dark); color: white;">
+                    <h3 style="color: var(--warning); margin-bottom: 1rem;">💬 시작 프롬프트 예시</h3>
+                    <div style="text-align: left; font-size: 0.95rem; line-height: 1.7; background: rgba(255,255,255,0.1); padding: 1rem; border-radius: 10px;">
+                        <p style="color: white;">나는 <span style="color: var(--warning);">[직업/역할]</span>이고,</p>
+                        <p style="color: white;"><span style="color: var(--warning);">[회사/팀]</span>에서 일해.</p>
+                        <p style="color: white; margin-top: 0.5rem;">업무에 활용할 에이전트를 만들고 싶은데,</p>
+                        <p style="color: white;"><strong>뭘 만들면 좋을지 질문해줘.</strong></p>
+                    </div>
+                    <p style="color: var(--success); margin-top: 1rem; font-size: 0.9rem;">✅ 아이디어 확정 후 → PRD 요청!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 46: 2단계 - PRD -->
+        <div class="slide slide-content" id="slide-46">
+            <div class="step-indicator">
+                <div class="step completed"></div>
+                <div class="step active"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+            </div>
+            <h2>2단계: AI에게 PRD 요청하기</h2>
+            <p style="margin-bottom: 1.5rem;">아이디어가 확정되면, PRD(기획서)를 요청합니다</p>
+            <div class="grid-2" style="max-width: 1000px;">
+                <div class="animate animate-delay-1">
+                    <div style="background: var(--light); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem;">
+                        <p style="color: var(--primary); font-weight: 600; margin-bottom: 0.5rem;">👤 1단계에서 아이디어 확정 후:</p>
+                        <p style="font-size: 1.1rem; color: var(--dark);">"좋아, 이 아이디어로 갈게!"</p>
+                    </div>
+                    <div style="background: var(--ax); color: white; padding: 1.5rem; border-radius: 15px;">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem; color: white;">👤 PRD 요청:</p>
+                        <p style="font-size: 1.1rem; color: white;">"이 아이디어로 <strong>PRD를 md 파일로 만들어줘</strong>"</p>
+                    </div>
+                </div>
+                <div class="card animate animate-delay-2" style="background: var(--dark); color: white;">
+                    <h3 style="color: var(--warning); margin-bottom: 1rem;">📄 AI가 만들어주는 PRD</h3>
+                    <ul style="list-style: none; padding: 0; text-align: left; font-size: 0.95rem;">
+                        <li style="margin-bottom: 0.5rem; color: white;">✅ 프로젝트 개요</li>
+                        <li style="margin-bottom: 0.5rem; color: white;">✅ 목표 및 배경</li>
+                        <li style="margin-bottom: 0.5rem; color: white;">✅ 입력/출력 정의</li>
+                        <li style="margin-bottom: 0.5rem; color: white;">✅ 기능 요구사항</li>
+                        <li style="margin-bottom: 0.5rem; color: white;">✅ 평가 기준</li>
+                        <li style="color: white;">✅ 기술 스택 제안</li>
+                    </ul>
+                    <p style="color: var(--success); margin-top: 1rem; font-size: 0.9rem;">💡 수정이 필요하면 피드백 후 재요청!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 47: 3단계 - 프롬프트 설계 -->
+        <div class="slide slide-content" id="slide-47">
+            <div class="step-indicator">
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step active"></div>
+                <div class="step"></div>
+            </div>
+            <h2>3단계: AI에게 프롬프트 설계 요청</h2>
+            <p style="margin-bottom: 1.5rem;">에이전트가 사용할 프롬프트도 AI가 만들어줍니다</p>
+            <div class="grid-2" style="max-width: 1000px;">
+                <div class="animate animate-delay-1">
+                    <div style="background: var(--ax); color: white; padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem;">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem; color: white;">👤 프롬프트 요청:</p>
+                        <p style="font-size: 1.1rem; color: white;">"이 PRD 기반으로 <strong>에이전트 프롬프트를 설계해줘</strong>"</p>
+                    </div>
+                    <div style="background: var(--light); padding: 1.5rem; border-radius: 15px;">
+                        <p style="color: var(--success); font-weight: 600; margin-bottom: 0.5rem;">🤖 AI가 설계해주는 것:</p>
+                        <ul style="list-style: none; padding: 0; font-size: 0.95rem; color: var(--dark);">
+                            <li style="margin-bottom: 0.3rem;">• 역할 정의 (당신은 ~전문가입니다)</li>
+                            <li style="margin-bottom: 0.3rem;">• 작업 설명 (~를 생성하세요)</li>
+                            <li style="margin-bottom: 0.3rem;">• 규칙/제약 (반드시 ~해야 합니다)</li>
+                            <li>• 출력 형식 (~형식으로 출력하세요)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card animate animate-delay-2" style="background: var(--dark); color: white;">
+                    <h3 style="color: var(--warning); margin-bottom: 1rem;">💡 피드백으로 개선하기</h3>
+                    <div style="text-align: left; font-size: 0.95rem; line-height: 1.7;">
+                        <p style="color: white; margin-bottom: 0.8rem;">"역할을 좀 더 구체적으로 해줘"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"규칙에 글자수 제한을 추가해줘"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"출력 예시도 포함해줘"</p>
+                        <p style="color: var(--success);">→ 원하는 프롬프트가 될 때까지 반복!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 48: 4단계 - 구현 -->
+        <div class="slide slide-content" id="slide-48">
+            <div class="step-indicator">
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step completed"></div>
+                <div class="step active"></div>
+            </div>
+            <h2>4단계: AI에게 코드 구현 요청</h2>
+            <p style="margin-bottom: 1.5rem;">코드도 AI가 만들어줍니다</p>
+            <div class="grid-2" style="max-width: 1100px;">
+                <div class="animate animate-delay-1">
+                    <div style="background: var(--ax); color: white; padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem;">
+                        <p style="font-weight: 600; margin-bottom: 0.5rem; color: white;">👤 코드 요청:</p>
+                        <p style="font-size: 1.1rem; color: white;">"이 PRD 기반으로 <strong>에이전트 코드를 만들어줘</strong>"</p>
+                    </div>
+                    <div style="background: var(--light); padding: 1.5rem; border-radius: 15px; margin-bottom: 1rem;">
+                        <p style="color: var(--success); font-weight: 600; margin-bottom: 0.5rem;">🤖 AI가 해주는 것:</p>
+                        <p style="font-size: 1rem; color: var(--dark);">코드 생성 → 파일 저장 → 실행 → 디버깅</p>
+                    </div>
+                    <div style="background: var(--light); padding: 1.5rem; border-radius: 15px;">
+                        <p style="color: var(--primary); font-weight: 600; margin-bottom: 0.5rem;">👤 테스트 요청:</p>
+                        <p style="font-size: 1rem; color: var(--dark);">"실행해서 테스트해봐"</p>
+                    </div>
+                </div>
+                <div class="card animate animate-delay-2" style="background: var(--dark); color: white;">
+                    <h3 style="color: var(--warning); margin-bottom: 1rem;">💡 피드백으로 개선하기</h3>
+                    <div style="text-align: left; font-size: 0.95rem; line-height: 1.7;">
+                        <p style="color: white; margin-bottom: 0.8rem;">"에러가 났어, 고쳐줘"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"출력 형식을 바꿔줘"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"속도를 더 빠르게 해줘"</p>
+                        <p style="color: var(--success);">→ 원하는 결과가 될 때까지 반복!</p>
+                    </div>
+                    <div style="background: var(--success); color: white; padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+                        코딩 지식 불필요! 대화로 완성! 🎉
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PART 6: 마무리 ==================== -->
+
+        <!-- Slide 49: 정리 -->
+        <div class="slide slide-content" id="slide-49">
+            <h2>📚 오늘 배운 것</h2>
+            <div class="grid-2" style="max-width: 1100px;">
+                <div class="card animate animate-delay-1" style="text-align: left;">
+                    <h3 style="color: var(--ax); margin-bottom: 1rem;">🧠 AX 사고방식</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• AI = 핵심 파트너</li>
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• Second Brain 협업</li>
+                        <li style="font-size: 1rem;">• 일하는 방식 재설계</li>
+                    </ul>
+                </div>
+                <div class="card animate animate-delay-2" style="text-align: left;">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">🏗️ AX 환경</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• Markdown = AI 언어</li>
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• 구조화된 파일 시스템</li>
+                        <li style="font-size: 1rem;">• VS Code + Claude Code</li>
+                    </ul>
+                </div>
+                <div class="card animate animate-delay-3" style="text-align: left;">
+                    <h3 style="color: var(--secondary); margin-bottom: 1rem;">🤖 AI 에이전트</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• 스스로 판단하고 행동</li>
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• INPUT → PROCESS → OUTPUT</li>
+                        <li style="font-size: 1rem;">• 자동 재시도로 품질 보장</li>
+                    </ul>
+                </div>
+                <div class="card animate animate-delay-4" style="text-align: left;">
+                    <h3 style="color: var(--success); margin-bottom: 1rem;">🛠️ 만들기 핵심</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• 내가 직접 만드는 게 아니라</li>
+                        <li style="margin-bottom: 0.5rem; font-size: 1rem;">• AI에게 요청하는 것!</li>
+                        <li style="font-size: 1rem;">• 피드백으로 원하는 결과까지!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 50: 마무리 -->
+        <div class="slide slide-title" id="slide-50">
+            <div class="badge animate animate-delay-1">Let's Build!</div>
+            <h1 class="animate animate-delay-2">이제 직접<br>만들어봅시다</h1>
+            <p class="subtitle animate animate-delay-3">코딩을 몰라도 AI 에이전트를 만들 수 있습니다</p>
+            <div class="flow animate animate-delay-4" style="margin-top: 2.5rem;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.3rem;">💡</div>
+                    <p style="font-size: 0.9rem;">아이디어</p>
+                </div>
+                <div class="flow-arrow" style="color: var(--white); opacity: 0.5;">→</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.3rem;">💬</div>
+                    <p style="font-size: 0.9rem;">Claude와 대화</p>
+                </div>
+                <div class="flow-arrow" style="color: var(--white); opacity: 0.5;">→</div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.3rem;">🤖</div>
+                    <p style="font-size: 0.9rem;">에이전트 완성</p>
+                </div>
+            </div>
+            <p class="animate" style="margin-top: 3rem; font-size: 1.2rem; opacity: 0.8;">
+                AX Agent Workshop | 모두의연구소
+            </p>
+        </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <nav class="controls">
+        <button class="prev" onclick="prevSlide()" aria-label="이전 슬라이드">◀</button>
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+        <span class="slide-counter" id="counter">1 / 47</span>
+        <button class="next" onclick="nextSlide()" aria-label="다음 슬라이드">▶</button>
+    </nav>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 50;
+
+        // Section mapping: [startSlide, endSlide]
+        const sections = {
+            1: [1, 7],    // AX 사고 + 정리
+            2: [8, 25],   // 환경 구축 + Antigravity/Homebrew/Node.js/CLI/API/VS Code + 정리
+            3: [26, 32],  // 에이전트 이해 + 상세비교 + 정리
+            4: [33, 42],  // 작동 원리 + 파일구조 + 장점 + 입출력예시 + 정리
+            5: [43, 48],  // 만들기 (4단계)
+            6: [49, 50]   // 마무리
+        };
+
+        function getCurrentSection(slideNum) {
+            for (const [section, [start, end]] of Object.entries(sections)) {
+                if (slideNum >= start && slideNum <= end) {
+                    return parseInt(section);
+                }
+            }
+            return 1;
+        }
+
+        function updateNavigation(slideNum) {
+            const currentSection = getCurrentSection(slideNum);
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const section = parseInt(item.dataset.section);
+                item.classList.remove('active');
+                if (section === currentSection) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        function goToSection(section) {
+            const [startSlide] = sections[section];
+            showSlide(startSlide);
+        }
+
+        function showSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+
+            currentSlide = n;
+
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+
+            const slide = document.getElementById(`slide-${n}`);
+            if (slide) {
+                slide.classList.add('active');
+            }
+
+            const progress = ((n - 1) / (totalSlides - 1)) * 100;
+            document.getElementById('progress').style.width = `${progress}%`;
+
+            document.getElementById('counter').textContent = `${n} / ${totalSlides}`;
+
+            document.querySelector('.prev').disabled = n === 1;
+            document.querySelector('.next').disabled = n === totalSlides;
+
+            history.replaceState(null, null, `#slide-${n}`);
+
+            updateNavigation(n);
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowRight':
+                case ' ':
+                case 'PageDown':
+                    e.preventDefault();
+                    nextSlide();
+                    break;
+                case 'ArrowLeft':
+                case 'PageUp':
+                    e.preventDefault();
+                    prevSlide();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    showSlide(1);
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    showSlide(totalSlides);
+                    break;
+            }
+        });
+
+        // Touch/swipe support
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }
+
+        function init() {
+            const hash = window.location.hash;
+            if (hash) {
+                const slideNum = parseInt(hash.replace('#slide-', ''));
+                if (!isNaN(slideNum) && slideNum >= 1 && slideNum <= totalSlides) {
+                    showSlide(slideNum);
+                    updateNavigation(slideNum);
+                    return;
+                }
+            }
+            showSlide(1);
+            updateNavigation(1);
+        }
+
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash;
+            const slideNum = parseInt(hash.replace('#slide-', ''));
+            if (!isNaN(slideNum) && slideNum !== currentSlide) {
+                showSlide(slideNum);
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
