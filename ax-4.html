@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>바이브코딩 & GitHub 호스팅</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: #000;
+      color: #1D1D1F;
+      overflow: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── GNB ── */
+    .gnb {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 100;
+    }
+    .gnb-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #3A3A3C;
+      letter-spacing: -0.01em;
+    }
+    .gnb-sections {
+      display: flex;
+      gap: 4px;
+    }
+    .gnb-section {
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #6E6E73;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+    }
+    .gnb-section:hover { color: #1D1D1F; background: #F5F5F7; }
+    .gnb-section.active { color: #FFFFFF; background: #1D1D1F; }
+    .gnb-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .gnb-counter {
+      font-size: 12px;
+      color: #6E6E73;
+      font-variant-numeric: tabular-nums;
+    }
+    .progress-track {
+      width: 100px;
+      height: 2px;
+      background: #E5E5EA;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #1D1D1F;
+      transition: width 0.3s ease;
+    }
+
+    /* ── Slides ── */
+    .slides-wrap {
+      width: 100vw;
+      height: calc(100vh - 52px);
+      margin-top: 52px;
+      position: relative;
+    }
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 72px 120px;
+      position: relative;
+      flex-direction: column;
+    }
+    .slide.active { display: flex; }
+
+    /* ── Slide Types ── */
+    .slide-cover {
+      background: #000000;
+      color: #FFFFFF;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .slide-section {
+      background: #000000;
+      color: #FFFFFF;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .slide-content {
+      background: #FFFFFF;
+      justify-content: flex-start;
+    }
+    .slide-dark {
+      background: #1D1D1F;
+      color: #FFFFFF;
+      justify-content: flex-start;
+    }
+
+    /* ── Cover ── */
+    .cover-eyebrow {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.45);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+    }
+    .cover-title {
+      font-size: 72px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: #FFFFFF;
+      margin-bottom: 28px;
+    }
+    .cover-subtitle {
+      font-size: 22px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 64px;
+      letter-spacing: -0.01em;
+    }
+    .cover-meta {
+      font-size: 14px;
+      color: rgba(255,255,255,0.35);
+    }
+    .cover-meta .name {
+      color: rgba(255,255,255,0.65);
+      font-weight: 500;
+    }
+
+    /* ── Section Divider ── */
+    .section-num {
+      font-size: 120px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.06);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: #FFFFFF;
+      margin-bottom: 18px;
+    }
+    .section-desc {
+      font-size: 20px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+    }
+
+    /* ── Slide Header ── */
+    .slide-header { margin-bottom: 44px; }
+    .slide-num {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6E6E73;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .slide-title {
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: -0.022em;
+      line-height: 1.2;
+      color: #1D1D1F;
+    }
+    .slide-dark .slide-title { color: #FFFFFF; }
+    .slide-dark .slide-num { color: rgba(255,255,255,0.35); }
+
+    /* ── Cards ── */
+    .card-grid { display: grid; gap: 20px; }
+    .col-2 { grid-template-columns: 1fr 1fr; }
+    .col-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .col-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+    .card {
+      background: #F5F5F7;
+      border-radius: 18px;
+      padding: 28px;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .card.dark { background: #1D1D1F; color: #FFFFFF; }
+    .card-icon { font-size: 36px; margin-bottom: 16px; }
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6E6E73;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1D1D1F;
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .card.dark .card-title { color: #FFFFFF; }
+    .card-desc {
+      font-size: 15px;
+      color: #6E6E73;
+      line-height: 1.6;
+    }
+    .card.dark .card-desc { color: rgba(255,255,255,0.55); }
+
+    /* ── Code Block ── */
+    .code-block {
+      background: #1D1D1F;
+      border-radius: 14px;
+      padding: 24px 28px;
+      font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+      font-size: 14px;
+      line-height: 1.85;
+      color: #F5F5F7;
+      overflow-x: auto;
+    }
+    .code-block .cm { color: rgba(255,255,255,0.3); }
+    .code-block .hl { color: #FFFFFF; font-weight: 600; }
+    .code-block .str { color: rgba(255,255,255,0.7); }
+    .code-block .kw { color: rgba(255,255,255,0.55); }
+
+    /* ── Steps ── */
+    .steps { display: flex; flex-direction: column; gap: 18px; }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 18px;
+    }
+    .step-num {
+      width: 38px; height: 38px;
+      background: #1D1D1F;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
+    .step-num.outline {
+      background: #F5F5F7;
+      border: 1.5px solid #E5E5EA;
+      color: #1D1D1F;
+    }
+    .step-content { padding-top: 5px; }
+    .step-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1D1D1F;
+      margin-bottom: 4px;
+    }
+    .step-desc { font-size: 15px; color: #6E6E73; line-height: 1.6; }
+
+    /* ── Callout ── */
+    .callout {
+      background: #F5F5F7;
+      border-left: 3px solid #1D1D1F;
+      border-radius: 0 12px 12px 0;
+      padding: 18px 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .callout.blue {
+      background: #F0F0F2;
+      border-left-color: #1D1D1F;
+    }
+    .callout-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+    .callout-text { font-size: 16px; color: #3A3A3C; line-height: 1.65; }
+    .callout-text strong { color: #1D1D1F; font-weight: 600; }
+
+    /* ── Highlight Box ── */
+    .highlight-box {
+      background: #1D1D1F;
+      border-radius: 14px;
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: auto;
+    }
+    .highlight-box .icon { font-size: 26px; flex-shrink: 0; }
+    .highlight-box .text {
+      font-size: 16px;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+    }
+    .highlight-box .text strong { color: #FFFFFF; }
+
+    /* ── List ── */
+    .list { list-style: none; }
+    .list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 17px;
+      color: #3A3A3C;
+      line-height: 1.6;
+    }
+    .list li::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: #1D1D1F;
+      border-radius: 50%;
+      margin-top: 9px;
+      flex-shrink: 0;
+    }
+    .slide-dark .list li { color: rgba(255,255,255,0.75); }
+    .slide-dark .list li::before { background: rgba(255,255,255,0.5); }
+
+    /* ── Two Col ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      flex: 1;
+    }
+    .col { display: flex; flex-direction: column; }
+    .col-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6E6E73;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    /* ── Flow ── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .flow-item {
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+      border-radius: 12px;
+      padding: 14px 22px;
+      text-align: center;
+    }
+    .flow-item.dark { background: #1D1D1F; border-color: #1D1D1F; color: #FFFFFF; }
+    .flow-item .flow-label { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .flow-item .flow-desc { font-size: 12px; color: #6E6E73; }
+    .flow-item.dark .flow-desc { color: rgba(255,255,255,0.5); }
+    .flow-arrow { font-size: 20px; color: #C7C7CC; }
+
+    /* ── Table ── */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6E6E73;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 12px 16px;
+      border-bottom: 1px solid #E5E5EA;
+      text-align: left;
+    }
+    .data-table td {
+      padding: 14px 16px;
+      font-size: 15px;
+      color: #3A3A3C;
+      border-bottom: 1px solid #F5F5F7;
+      line-height: 1.5;
+    }
+    .data-table td:first-child { color: #1D1D1F; font-weight: 500; }
+
+    /* ── Nav Buttons ── */
+    .nav-btns {
+      position: fixed;
+      bottom: 28px;
+      right: 36px;
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+    .nav-btn {
+      width: 46px; height: 46px;
+      background: rgba(255,255,255,0.95);
+      border: 1px solid rgba(0,0,0,0.12);
+      border-radius: 12px;
+      color: #1D1D1F;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(10px);
+    }
+    .nav-btn:hover { background: #FFFFFF; border-color: #1D1D1F; }
+
+    /* ── Bottom Progress ── */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0; left: 0;
+      height: 2px;
+      background: #1D1D1F;
+      transition: width 0.3s ease;
+      z-index: 100;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 1100px) {
+      .slide { padding: 56px 72px; }
+      .cover-title { font-size: 56px; }
+      .slide-title { font-size: 34px; }
+    }
+    @media (max-width: 800px) {
+      .slide { padding: 40px 36px; }
+      .col-3 { grid-template-columns: 1fr 1fr; }
+      .col-2, .two-col { grid-template-columns: 1fr; gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- GNB -->
+<nav class="gnb">
+  <div class="gnb-title">바이브코딩 &amp; GitHub 호스팅</div>
+  <div class="gnb-sections">
+    <div class="gnb-section active" data-sec="intro" onclick="goSection('intro')">개요</div>
+    <div class="gnb-section" data-sec="concept" onclick="goSection('concept')">Git 개념</div>
+    <div class="gnb-section" data-sec="single" onclick="goSection('single')">단일 파일 업로드</div>
+    <div class="gnb-section" data-sec="terminal" onclick="goSection('terminal')">직접 Push</div>
+  </div>
+  <div class="gnb-right">
+    <div class="gnb-counter" id="counter">1 / 11</div>
+    <div class="progress-track"><div class="progress-fill" id="pfill"></div></div>
+  </div>
+</nav>
+
+<div class="slides-wrap">
+
+  <!-- 1: Cover -->
+  <div class="slide slide-cover active" data-slide="1" data-sec="intro">
+    <div class="cover-eyebrow">모두의연구소 KHP팀</div>
+    <h1 class="cover-title">바이브코딩 &amp;<br>GitHub 호스팅</h1>
+    <p class="cover-subtitle">바이브 코딩한 HTML 파일을 GitHub에 올리는 방법</p>
+    <div class="cover-meta"><span class="name">김은주</span> · 모두의연구소 KHP팀 팀장</div>
+  </div>
+
+  <!-- 2: 전체 흐름 개요 -->
+  <div class="slide slide-content" data-slide="2" data-sec="intro">
+    <div class="slide-header">
+      <div class="slide-num">02</div>
+      <h2 class="slide-title">어떤 방법을 쓸까?</h2>
+    </div>
+    <div class="card-grid col-2" style="flex:1; align-content:start; gap:24px;">
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <div class="card-title">단일 파일일 때</div>
+        <div class="card-desc">방법 1, 2, 3을 사용합니다.<br>GitHub 웹에서 직접 파일을 붙여넣기하거나 드래그로 올릴 수 있어요.</div>
+      </div>
+      <div class="card dark">
+        <div class="card-icon">📁</div>
+        <div class="card-title">여러 파일·폴더일 때</div>
+        <div class="card-desc">방법 4를 사용합니다.<br>터미널에서 AI에게 Push 시키거나 직접 Git 명령어로 올립니다.</div>
+      </div>
+    </div>
+    <div class="highlight-box" style="margin-top:28px;">
+      <div class="icon">💡</div>
+      <div class="text">단일 HTML 파일이라면 <strong>방법 1~3이 훨씬 간단</strong>합니다. 코드 에디터 없이 GitHub 웹에서 바로 올릴 수 있어요.</div>
+    </div>
+  </div>
+
+  <!-- 3: Git/GitHub 개념 — Section -->
+  <div class="slide slide-section" data-slide="3" data-sec="concept">
+    <div class="section-num">01</div>
+    <h2 class="section-title">Git과 GitHub</h2>
+    <p class="section-desc">먼저 두 가지 개념을 간단히 이해하고 시작합니다</p>
+  </div>
+
+  <!-- 4: Git vs GitHub -->
+  <div class="slide slide-content" data-slide="4" data-sec="concept">
+    <div class="slide-header">
+      <div class="slide-num">04</div>
+      <h2 class="slide-title">Git과 GitHub의 차이</h2>
+    </div>
+    <div class="two-col" style="gap:36px; flex:1;">
+      <div class="col">
+        <div class="col-label">Git</div>
+        <div class="card" style="flex:1;">
+          <div class="card-icon">🗂️</div>
+          <div class="card-title">버전 관리 도구</div>
+          <div class="card-desc" style="font-size:16px; line-height:1.7;">코드의 <strong>변경 이력을 추적</strong>하는 도구예요.<br><br>"저장 버튼 + 히스토리 기능"이라고 생각하면 됩니다.</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-label">GitHub</div>
+        <div class="card dark" style="flex:1;">
+          <div class="card-icon">☁️</div>
+          <div class="card-title">클라우드 저장소</div>
+          <div class="card-desc" style="font-size:16px; line-height:1.7;">Git으로 관리하는 코드를 <strong>온라인에 올려두는 저장소</strong>예요.<br><br>협업 기능(코드 리뷰, 이슈 관리, 프로젝트 보드 등)이 더해진 플랫폼입니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5: 단일 파일 업로드 — Section -->
+  <div class="slide slide-section" data-slide="5" data-sec="single">
+    <div class="section-num">02</div>
+    <h2 class="section-title">단일 파일 업로드</h2>
+    <p class="section-desc">방법 0~3: GitHub 웹에서 바로 올리는 방법</p>
+  </div>
+
+  <!-- 6: Step 0 — Repository 만들기 -->
+  <div class="slide slide-content" data-slide="6" data-sec="single">
+    <div class="slide-header">
+      <div class="slide-num">06</div>
+      <h2 class="slide-title">Step 0 — GitHub Repository 만들기</h2>
+    </div>
+    <div class="steps" style="max-width:720px;">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">github.com 접속 후 로그인</div>
+          <div class="step-desc"><a href="https://github.com" style="color:#1D1D1F;">https://github.com</a></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">New repository 클릭</div>
+          <div class="step-desc">우측 상단 <strong>+</strong> 버튼 또는 프로필 페이지에서 생성</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Repository 이름 입력 후 Create</div>
+          <div class="step-desc">Public으로 설정해야 GitHub Pages로 공개 호스팅 가능</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <div class="step-title">Settings → Pages → Branch 설정</div>
+          <div class="step-desc">main 브랜치, / (root) 선택 후 Save → 호스팅 URL 발급</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7: Step 1~3 단일 파일 올리기 -->
+  <div class="slide slide-content" data-slide="7" data-sec="single">
+    <div class="slide-header">
+      <div class="slide-num">07</div>
+      <h2 class="slide-title">단일 파일 올리기 3가지 방법</h2>
+    </div>
+    <div class="card-grid col-3" style="flex:1; align-content:start;">
+      <div class="card">
+        <div class="card-icon">📝</div>
+        <div class="card-label">방법 1</div>
+        <div class="card-title">MD 파일 복붙</div>
+        <div class="card-desc">Repository에서 <strong>Create new file</strong> 클릭 → 파일명 입력 → 내용 붙여넣기 → Commit</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">💻</div>
+        <div class="card-label">방법 2</div>
+        <div class="card-title">Gemini HTML 복붙</div>
+        <div class="card-desc">Gemini에서 생성한 HTML 코드를 복사 → GitHub 새 파일로 붙여넣기 → <strong>index.html</strong>로 저장</div>
+      </div>
+      <div class="card dark">
+        <div class="card-icon">🚀</div>
+        <div class="card-label">방법 3</div>
+        <div class="card-title">Antigravity HTML 업로드</div>
+        <div class="card-desc">Antigravity에서 만든 HTML 파일 → Repository에서 <strong>Upload files</strong> 클릭 → 드래그 업로드</div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:24px;">
+      <div class="callout-icon">💡</div>
+      <div class="callout-text">파일명을 <strong>index.html</strong>로 저장하면 GitHub Pages URL에 파일명 없이 바로 접속됩니다.</div>
+    </div>
+  </div>
+
+  <!-- 8: Step 1 MD 파일 예시 -->
+  <div class="slide slide-dark" data-slide="8" data-sec="single">
+    <div class="slide-header">
+      <div class="slide-num">08</div>
+      <h2 class="slide-title">MD 파일 예시 (복붙 실습용)</h2>
+    </div>
+    <div class="code-block" style="flex:1; overflow-y:auto; font-size:13px;">
+<span class="hl">## 프로그램 명</span>
+Zero to Agent - 첫 AI 에이전트 만들기
+
+<span class="hl">## 목적</span>
+<span class="kw">1.</span> 재직자의 AI 도구 활용 역량을 강화하고 실무 적용 가능성을 확인한다
+<span class="kw">2.</span> 비개발 직군(마케터·기획자·디자이너)이 직접 제작한 AI 에이전트 사례를 공유한다
+<span class="kw">3.</span> AI 에이전트 제작 과정에서 얻은 실전 노하우와 인사이트를 나눈다
+<span class="kw">4.</span> 다양한 직군 간 AI 활용 경험을 교류하며 업무 적용 아이디어를 발굴한다
+<span class="kw">5.</span> 재직자의 디지털 전환 역량 개발을 위한 지속적 학습 동기를 부여한다
+
+<span class="hl">## 운영 일정</span>
+2026년 4월 10일(금) 20:00 ~ 22:00
+
+<span class="hl">## 참여 대상</span>
+총 50명
+- AI를 업무에 활용하고자 하는 재직자 (마케터·기획자·디자이너 등)
+- AI 에이전트 제작에 관심 있는 직장인
+- AI 활용 스터디 수강생 12명 (사례 발표자 3명 포함)
+    </div>
+  </div>
+
+  <!-- 9: Step 4 Push — AI에게 시키기 / Section Terminal -->
+  <div class="slide slide-section" data-slide="9" data-sec="terminal">
+    <div class="section-num">03</div>
+    <h2 class="section-title">직접 Push 하기</h2>
+    <p class="section-desc">여러 파일·폴더 구조일 때 — AI에게 시키거나 터미널에서 직접</p>
+  </div>
+
+  <!-- 10: Step 4 — AI에게 Push 시키기 -->
+  <div class="slide slide-content" data-slide="10" data-sec="terminal">
+    <div class="slide-header">
+      <div class="slide-num">10</div>
+      <h2 class="slide-title">Step 4 — AI에게 Push 시키기</h2>
+    </div>
+    <div class="two-col" style="gap:40px; flex:1;">
+      <div class="col" style="justify-content:flex-start; gap:18px;">
+        <div class="col-label">언제 사용?</div>
+        <div class="card" style="margin-bottom:0;">
+          <ul class="list">
+            <li>여러 파일이 폴더로 구성되어 있을 때</li>
+            <li>Antigravity 또는 VS Code에서 작업 중일 때</li>
+            <li>터미널 명령어가 익숙하지 않을 때</li>
+          </ul>
+        </div>
+        <div class="col-label" style="margin-top:8px;">어떻게?</div>
+        <div class="callout">
+          <div class="callout-icon">🤖</div>
+          <div class="callout-text">AI에게 Repository URL을 알려주고 Push 요청!</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-label">AI에게 이렇게 말하세요</div>
+        <div class="code-block" style="flex:1;">
+<span class="str">"https://github.com/내아이디/저장소이름"</span>
+<span class="cm">여기에 push 하고 싶어 해줘~~~~~</span>
+        </div>
+        <div class="callout" style="margin-top:16px;">
+          <div class="callout-icon">💡</div>
+          <div class="callout-text">AI가 SSH 연결 확인부터 git add, commit, push 명령어까지 전부 대신 실행해 줍니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11: Step 5 — 직접 Push (터미널) -->
+  <div class="slide slide-content" data-slide="11" data-sec="terminal">
+    <div class="slide-header">
+      <div class="slide-num">11</div>
+      <h2 class="slide-title">Step 5 — 직접 Push 하기 (터미널)</h2>
+    </div>
+    <div class="two-col" style="gap:36px; flex:1;">
+      <div class="col" style="gap:14px;">
+        <div class="steps">
+          <div class="step">
+            <div class="step-num outline">1</div>
+            <div class="step-content">
+              <div class="step-title">SSH 키 생성</div>
+              <div class="step-desc">엔터 × 2, 비밀번호 입력</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num outline">2</div>
+            <div class="step-content">
+              <div class="step-title">GitHub에 공개키 등록</div>
+              <div class="step-desc">프로필 → Settings → SSH and GPG keys → New SSH key → 붙여넣기</div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num outline">3</div>
+            <div class="step-content">
+              <div class="step-title">연결 확인</div>
+              <div class="step-desc"><code style="background:#F5F5F7;padding:2px 6px;border-radius:5px;font-size:13px;">ssh -T git@github.com</code></div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num outline">4</div>
+            <div class="step-content">
+              <div class="step-title">AI에게 Repository 알려주고 Push</div>
+              <div class="step-desc">VS Code / Antigravity 터미널에서</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col" style="gap:14px;">
+        <div class="col-label">SSH 키 생성 명령어</div>
+        <div class="code-block">
+<span class="cm"># 1. SSH 키 생성</span>
+<span class="hl">ssh-keygen -t ed25519 -C "your_email@example.com"</span>
+<span class="cm"># 엔터 엔터, 비밀번호 입력하기</span>
+
+<span class="cm"># 2. 공개키 확인 (복사해서 GitHub에 붙여넣기)</span>
+<span class="hl">cat ~/.ssh/id_ed25519.pub</span>
+
+<span class="cm"># 3. 연결 확인</span>
+<span class="hl">ssh -T git@github.com</span>
+
+<span class="cm"># 4. Push 요청 예시</span>
+<span class="str">"https://github.com/내아이디/저장소 여기에 push 해줘"</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /slides-wrap -->
+
+<!-- Nav Buttons -->
+<div class="nav-btns">
+  <button class="nav-btn" id="btnPrev" onclick="move(-1)">←</button>
+  <button class="nav-btn" id="btnNext" onclick="move(1)">→</button>
+</div>
+
+<!-- Bottom Progress -->
+<div class="bottom-bar" id="bbar"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let cur = 0;
+
+  const sectionMap = {};
+  slides.forEach((s, i) => {
+    const sec = s.dataset.sec;
+    if (sec && sectionMap[sec] === undefined) sectionMap[sec] = i;
+  });
+
+  function showSlide(n) {
+    slides[cur].classList.remove('active');
+    cur = Math.max(0, Math.min(total - 1, n));
+    slides[cur].classList.add('active');
+    update();
+  }
+
+  function move(d) { showSlide(cur + d); }
+
+  function goSection(sec) {
+    if (sectionMap[sec] !== undefined) showSlide(sectionMap[sec]);
+  }
+
+  function update() {
+    document.getElementById('counter').textContent = `${cur + 1} / ${total}`;
+    document.getElementById('pfill').style.width = `${((cur + 1) / total) * 100}%`;
+    document.getElementById('bbar').style.width = `${((cur + 1) / total) * 100}%`;
+    document.getElementById('btnPrev').disabled = cur === 0;
+    document.getElementById('btnNext').disabled = cur === total - 1;
+
+    // GNB active
+    const curSec = slides[cur].dataset.sec;
+    document.querySelectorAll('.gnb-section').forEach(el => {
+      el.classList.toggle('active', el.dataset.sec === curSec);
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); move(1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+  });
+
+  // Touch swipe
+  let tx = 0;
+  document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = tx - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) move(dx > 0 ? 1 : -1);
+  });
+
+  update();
+</script>
+</body>
+</html>
