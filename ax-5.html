@@ -1,0 +1,2365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 협업부터 에이전트 구축까지</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #FFFFFF;
+      --surface: #F5F5F7;
+      --surface-light: #FAFAFA;
+      --border: #E5E5EA;
+      --text: #1D1D1F;
+      --text-secondary: #3A3A3C;
+      --text-muted: #6E6E73;
+      --accent: #1D1D1F;
+      --highlight: #000000;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── Navigation Bar ─────────────────────────────────────── */
+    .nav-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid #E5E5EA;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 100;
+    }
+
+    .nav-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1D1D1F;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-sections {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-section {
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #6E6E73;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-section:hover {
+      color: #1D1D1F;
+      background: #F5F5F7;
+    }
+
+    .nav-section.active {
+      color: #FFFFFF;
+      background: #1D1D1F;
+    }
+
+    .nav-progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-counter {
+      font-size: 12px;
+      font-weight: 500;
+      color: #6E6E73;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .progress-bar {
+      width: 120px;
+      height: 2px;
+      background: #E5E5EA;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #1D1D1F;
+      transition: width 0.3s ease;
+    }
+
+    /* ── Slides ─────────────────────────────────────────────── */
+    .slides {
+      width: 100vw;
+      height: calc(100vh - 56px);
+      margin-top: 56px;
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      height: 100%;
+      padding: 72px 120px;
+      position: relative;
+      flex-direction: column;
+      background: #FFFFFF;
+      color: #1D1D1F;
+    }
+
+    .slide.active { display: flex; }
+
+    /* ── Slide Types ─────────────────────────────────────────── */
+    .slide--cover {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: #000000;
+      color: #FFFFFF;
+    }
+
+    .slide--section {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: #000000;
+      color: #FFFFFF;
+    }
+
+    .slide--content {
+      justify-content: flex-start;
+      background: #FFFFFF;
+      color: #1D1D1F;
+    }
+
+    /* ── Cover Typography ────────────────────────────────────── */
+    .cover-title {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      color: #FFFFFF;
+    }
+
+    .cover-title .highlight {
+      position: relative;
+      display: inline-block;
+    }
+
+    .cover-title .highlight::after {
+      content: '';
+      position: absolute;
+      bottom: 8px; left: 0; right: 0;
+      height: 12px;
+      background: rgba(255,255,255,0.15);
+      z-index: -1;
+    }
+
+    .cover-subtitle {
+      font-size: 24px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 64px;
+      letter-spacing: -0.01em;
+    }
+
+    .cover-meta {
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    .cover-meta .name {
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+    }
+
+    /* ── Section Typography ──────────────────────────────────── */
+    .section-number {
+      font-size: 120px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.08);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      color: #FFFFFF;
+    }
+
+    .section-desc {
+      font-size: 22px;
+      color: rgba(255,255,255,0.55);
+      max-width: 700px;
+      line-height: 1.7;
+    }
+
+    /* ── Slide Header ────────────────────────────────────────── */
+    .slide-header { margin-bottom: 48px; }
+
+    .slide-number {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6E6E73;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+
+    .slide-title {
+      font-size: 40px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      color: #1D1D1F;
+    }
+
+    .slide-title .em {
+      color: #1D1D1F;
+      position: relative;
+    }
+
+    .slide-title .em::after {
+      content: '';
+      position: absolute;
+      bottom: 2px; left: 0; right: 0;
+      height: 2px;
+      background: #1D1D1F;
+      z-index: -1;
+    }
+
+    /* ── Grids ───────────────────────────────────────────────── */
+    .grid { display: grid; gap: 24px; }
+    .grid--2 { grid-template-columns: repeat(2, 1fr); }
+    .grid--3 { grid-template-columns: repeat(3, 1fr); }
+    .grid--4 { grid-template-columns: repeat(4, 1fr); }
+
+    /* ── Card ────────────────────────────────────────────────── */
+    .card {
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: none;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    .card--highlight {
+      background: #F0F0F0;
+      border-color: #D2D2D7;
+    }
+
+    .card-number {
+      font-size: 48px;
+      font-weight: 700;
+      color: #D2D2D7;
+      margin-bottom: 16px;
+      line-height: 1;
+    }
+
+    .card-icon {
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+      color: #1D1D1F;
+    }
+
+    .card-desc {
+      font-size: 16px;
+      color: #6E6E73;
+      line-height: 1.6;
+    }
+
+    .card--sm { padding: 24px; }
+    .card--sm .card-icon { font-size: 28px; margin-bottom: 12px; }
+    .card--sm .card-title { font-size: 18px; margin-bottom: 8px; }
+    .card--sm .card-desc { font-size: 14px; }
+
+    /* ── Logo Frame ──────────────────────────────────────────── */
+    .logo-frame {
+      width: 120px; height: 120px;
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .logo-frame img {
+      width: 80px; height: 80px;
+      object-fit: contain;
+    }
+
+    /* ── Two Column Layout ───────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      flex: 1;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .col-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6E6E73;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* ── Compare Cards ───────────────────────────────────────── */
+    .compare {
+      flex: 1;
+      border-radius: 16px;
+      padding: 32px;
+    }
+
+    .compare--before {
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+    }
+
+    .compare--after {
+      background: #1D1D1F;
+      color: #FFFFFF;
+      border: 1px solid #1D1D1F;
+    }
+
+    .compare-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .compare--before .compare-title { color: #3A3A3C; }
+    .compare--after .compare-title { color: #FFFFFF; }
+
+    /* ── Lists ───────────────────────────────────────────────── */
+    .list { list-style: none; }
+
+    .list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 16px;
+      font-size: 17px;
+      color: #3A3A3C;
+      line-height: 1.6;
+    }
+
+    .list li::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: #D2D2D7;
+      border-radius: 50%;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    .list--highlight li::before { background: #1D1D1F; }
+
+    .compare--after .list li { color: #FFFFFF; }
+    .compare--after .list li::before { background: #FFFFFF; }
+
+    /* ── Flow Diagram ────────────────────────────────────────── */
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 40px 0;
+    }
+
+    .flow-item {
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+      border-radius: 12px;
+      padding: 24px 36px;
+      text-align: center;
+      color: #1D1D1F;
+    }
+
+    .flow-item--highlight {
+      background: #1D1D1F;
+      color: #FFFFFF;
+      border-color: #1D1D1F;
+    }
+
+    .flow-label {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .flow-desc {
+      font-size: 14px;
+      color: #6E6E73;
+    }
+
+    .flow-item--highlight .flow-desc {
+      color: rgba(255,255,255,0.6);
+    }
+
+    .flow-arrow {
+      font-size: 24px;
+      color: #C7C7CC;
+    }
+
+    /* ── Code Block ──────────────────────────────────────────── */
+    .code {
+      background: #1D1D1F;
+      border: none;
+      border-radius: 12px;
+      padding: 28px;
+      font-family: 'SF Mono', 'Menlo', monospace;
+      font-size: 16px;
+      line-height: 1.8;
+      color: #F5F5F7;
+    }
+
+    .code .hl { color: #FFFFFF; font-weight: 600; }
+    .code .dim { color: rgba(255,255,255,0.35); }
+
+    /* ── Highlight Box ───────────────────────────────────────── */
+    .highlight-box {
+      background: #F5F5F7;
+      border: none;
+      border-left: 3px solid #1D1D1F;
+      border-radius: 0 12px 12px 0;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: auto;
+    }
+
+    .highlight-box .icon { font-size: 28px; flex-shrink: 0; color: #1D1D1F; }
+
+    .highlight-box .text {
+      font-size: 17px;
+      color: #3A3A3C;
+      line-height: 1.6;
+    }
+
+    .highlight-box .text strong {
+      color: #1D1D1F;
+      font-weight: 600;
+    }
+
+    /* ── Numbered Steps ──────────────────────────────────────── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .step-num {
+      width: 40px; height: 40px;
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: #1D1D1F;
+      flex-shrink: 0;
+    }
+
+    .step-content { padding-top: 6px; }
+    .step-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; color: #1D1D1F; }
+    .step-desc { font-size: 16px; color: #6E6E73; }
+
+    /* ── Table ───────────────────────────────────────────────── */
+    .table { width: 100%; border-collapse: collapse; }
+
+    .table th, .table td {
+      padding: 18px 24px;
+      text-align: left;
+      border-bottom: 1px solid #E5E5EA;
+      font-size: 16px;
+    }
+
+    .table th {
+      font-size: 11px;
+      font-weight: 600;
+      color: #6E6E73;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: transparent;
+      border-bottom: 1px solid #E5E5EA;
+    }
+
+    .table td { color: #3A3A3C; border-bottom: 1px solid #F5F5F7; }
+    .table td:first-child { color: #1D1D1F; font-weight: 500; }
+
+    /* ── Center Content ──────────────────────────────────────── */
+    .center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      flex: 1;
+    }
+
+    /* ── Image ───────────────────────────────────────────────── */
+    .img-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+    }
+
+    .img-container img {
+      max-width: 100%;
+      max-height: 50vh;
+      border-radius: 16px;
+      border: 1px solid #E5E5EA;
+    }
+
+    /* ── Image Carousel ──────────────────────────────────────── */
+    .carousel-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .carousel {
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
+      padding: 20px 0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .carousel::-webkit-scrollbar { height: 6px; }
+    .carousel::-webkit-scrollbar-track { background: #F5F5F7; border-radius: 3px; }
+    .carousel::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 3px; }
+    .carousel::-webkit-scrollbar-thumb:hover { background: #6E6E73; }
+
+    .carousel-item {
+      flex: 0 0 45%;
+      scroll-snap-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .carousel-item:hover { transform: scale(1.02); opacity: 0.9; }
+
+    .carousel-item img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 8px;
+    }
+
+    .carousel-hint {
+      text-align: center;
+      font-size: 13px;
+      color: #6E6E73;
+      margin-top: 16px;
+    }
+
+    .carousel-nav {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .carousel-nav-btn {
+      width: 40px; height: 40px;
+      background: #FFFFFF;
+      border: 1px solid #D2D2D7;
+      border-radius: 10px;
+      color: #6E6E73;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .carousel-nav-btn:hover {
+      background: #F5F5F7;
+      border-color: #1D1D1F;
+      color: #1D1D1F;
+    }
+
+    /* ── Q&A Slide ───────────────────────────────────────────── */
+    .qa-title {
+      font-size: 120px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 24px;
+      color: #FFFFFF;
+    }
+
+    .qa-subtitle {
+      font-size: 18px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .qa-message {
+      font-size: 20px;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.7;
+      max-width: 600px;
+      margin-bottom: 64px;
+    }
+
+    .qa-message strong {
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    /* ── Lightbox ────────────────────────────────────────────── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.97);
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out;
+      flex-direction: column;
+    }
+
+    .lightbox.active { display: flex; }
+
+    .lightbox img {
+      max-width: 90vw;
+      max-height: 85vh;
+      border-radius: 12px;
+      cursor: default;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px; right: 24px;
+      font-size: 32px;
+      color: rgba(255,255,255,0.5);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .lightbox-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 32px;
+      color: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 50%;
+      width: 48px; height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .lightbox-nav--prev { left: 24px; }
+    .lightbox-nav--next { right: 24px; }
+
+    .lightbox-caption {
+      margin-top: 16px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* ── Navigation Buttons ──────────────────────────────────── */
+    .nav-buttons {
+      position: fixed;
+      bottom: 32px;
+      right: 40px;
+      display: flex;
+      gap: 8px;
+      z-index: 100;
+    }
+
+    .nav-btn {
+      width: 48px; height: 48px;
+      background: #FFFFFF;
+      border: 1px solid #D2D2D7;
+      border-radius: 12px;
+      color: #1D1D1F;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-btn:hover {
+      background: #F5F5F7;
+      border-color: #1D1D1F;
+    }
+
+    /* ── Bottom Progress ─────────────────────────────────────── */
+    .bottom-progress {
+      position: fixed;
+      bottom: 0; left: 0;
+      height: 2px;
+      background: #1D1D1F;
+      transition: width 0.3s;
+      z-index: 100;
+    }
+
+    /* ── Utility ─────────────────────────────────────────────── */
+    .mb-24 { margin-bottom: 24px; }
+    .mb-32 { margin-bottom: 32px; }
+    .mb-48 { margin-bottom: 48px; }
+
+    /* ── Icebreaker ──────────────────────────────────────────── */
+    .icebreaker-item {
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+      border-radius: 16px;
+      padding: 32px 40px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      transition: all 0.2s;
+    }
+
+    .icebreaker-item:hover {
+      background: #EBEBED;
+      border-color: #D2D2D7;
+    }
+
+    .icebreaker-emoji {
+      font-size: 36px;
+      flex-shrink: 0;
+    }
+
+    .icebreaker-text {
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.4;
+      color: #1D1D1F;
+    }
+
+    .icebreaker-text .soft {
+      color: #6E6E73;
+      font-weight: 400;
+      font-size: 18px;
+      display: block;
+      margin-top: 4px;
+    }
+
+    /* ── Demo Slide ──────────────────────────────────────────── */
+    .demo-box {
+      background: #F5F5F7;
+      border: 1px solid #E5E5EA;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .demo-box .demo-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #1D1D1F;
+    }
+
+    .demo-box .demo-desc {
+      font-size: 16px;
+      color: #6E6E73;
+    }
+
+    @media (max-width: 1200px) {
+      .slide { padding: 60px 80px; }
+      .cover-title { font-size: 48px; }
+      .slide-title { font-size: 36px; }
+      .section-title { font-size: 40px; }
+    }
+
+    @media (max-width: 900px) {
+      .slide { padding: 40px; }
+      .grid--3, .grid--4 { grid-template-columns: repeat(2, 1fr); }
+      .two-col { grid-template-columns: 1fr; gap: 32px; }
+      .flow { flex-wrap: wrap; }
+    }
+</style>
+</head>
+<body>
+
+<!-- Navigation Bar -->
+<div class="nav-bar">
+  <div class="nav-title">AI 협업부터 에이전트 구축까지</div>
+  <div class="nav-sections">
+    <div class="nav-section active" data-section="opening" onclick="goToSection('opening')">Opening</div>
+    <div class="nav-section" data-section="step1" onclick="goToSection('step1')">AI 협업 설계</div>
+    <div class="nav-section" data-section="step2" onclick="goToSection('step2')">실전 작업 환경</div>
+    <div class="nav-section" data-section="step3" onclick="goToSection('step3')">바이브코딩</div>
+    <div class="nav-section" data-section="step4" onclick="goToSection('step4')">AI 에이전트</div>
+    <div class="nav-section" data-section="demo" onclick="goToSection('demo')">라이브 데모</div>
+    <div class="nav-section" data-section="closing" onclick="goToSection('closing')">마무리</div>
+  </div>
+  <div class="nav-progress">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="nav-counter" id="nav-counter">1 / 38</div>
+  </div>
+</div>
+
+<!-- ===================== SLIDES ===================== -->
+<div class="slides">
+
+<!-- ===================== OPENING ===================== -->
+
+<!-- 1: Cover -->
+<div class="slide slide--cover" data-slide="1">
+  <div class="cover-title">AI <span class="highlight">협업</span>부터<br>에이전트 <span class="highlight">구축</span>까지</div>
+  <div class="cover-subtitle">프롬프트에서 파이프라인으로</div>
+  <div class="cover-meta"><span class="name">김은주</span> · 모두의연구소 KHP팀 KHP팀 팀장</div>
+</div>
+
+<!-- 2: 모두의연구소 소개 -->
+<div class="slide slide--content" data-slide="2">
+  <div class="slide-header">
+    <div class="slide-number">02</div>
+    <h2 class="slide-title">모두의연구소</h2>
+  </div>
+  <p style="font-size: 20px; color: var(--text-secondary); margin-bottom: 40px;">
+    가치를 나누며 성장하는 AI 커뮤니티 & 교육 플랫폼
+  </p>
+  <div class="grid grid--4 mb-32">
+    <div class="card card--sm">
+      <div class="card-icon">🎤</div>
+      <div class="card-title">모두팝</div>
+      <div class="card-desc">월 2~3회 무료 AI 세미나<br>강남캠퍼스 오프라인</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">🎪</div>
+      <div class="card-title">모두콘</div>
+      <div class="card-desc">연 1회 AI 컨퍼런스<br>최신 트렌드 공유</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">🔬</div>
+      <div class="card-title">LAB / 스터디</div>
+      <div class="card-desc">직장인 연구 활동<br>실전 프로젝트 중심</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">📬</div>
+      <div class="card-title">모두레터</div>
+      <div class="card-desc">2만 구독 AI 뉴스레터<br>매주 월요일 발행</div>
+    </div>
+  </div>
+  <div class="grid grid--3">
+    <div class="card card--sm">
+      <div class="card-icon">🎓</div>
+      <div class="card-title">아이펠</div>
+      <div class="card-desc">AI 전문가 양성 과정</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">💼</div>
+      <div class="card-title">기업 교육</div>
+      <div class="card-desc">맞춤형 AI 역량 교육</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">🤝</div>
+      <div class="card-title">모두모임</div>
+      <div class="card-desc">AI 커뮤니티 플랫폼</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3: 강사 소개 + 로드맵 -->
+<div class="slide slide--content" data-slide="3">
+  <div class="slide-header">
+    <div class="slide-number">03</div>
+    <h2 class="slide-title">오늘의 <span class="em">여정</span></h2>
+  </div>
+  <div class="two-col">
+    <div class="col">
+      <div class="col-label">강사 소개</div>
+      <div class="card" style="flex: 1;">
+        <div class="card-title">김은주</div>
+        <div class="card-desc" style="margin-bottom: 16px;">모두의연구소 KHP팀 KHP팀 팀장</div>
+        <ul class="list">
+          <li>코딩을 전문적으로 배운 적 없는 마케터</li>
+          <li>매일 코드편집기에서 AI와 함께 업무</li>
+          <li>비개발자의 언어로 가장 쉽게, 하지만 강력한 AI 활용법 전파</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">오늘의 로드맵</div>
+      <div class="steps" style="flex: 1;">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">AI 협업 설계</div>
+            <div class="step-desc">AI를 팀원으로 만드는 사고방식</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">실전 작업 환경</div>
+            <div class="step-desc">코드편집기로 일하는 법</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">바이브코딩</div>
+            <div class="step-desc">말로 문서·서비스 만들기</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">AI 에이전트</div>
+            <div class="step-desc">반복 업무를 AI에게 맡기기</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-content">
+            <div class="step-title">라이브 데모</div>
+            <div class="step-desc">다채널 홍보 에이전트를 직접 만듭니다</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4: 아이스브레이킹 - 시작 전 질문 -->
+<div class="slide slide--content" data-slide="4">
+  <div class="slide-header">
+    <div class="slide-number">04</div>
+    <h2 class="slide-title">시작 전 <span class="em">질문</span></h2>
+  </div>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <div class="icebreaker-item">
+      <div class="icebreaker-emoji">🙋</div>
+      <div class="icebreaker-text">
+        AI 써보신 분?
+        <span class="soft">ChatGPT, Claude, Gemini 등</span>
+      </div>
+    </div>
+    <div class="icebreaker-item">
+      <div class="icebreaker-emoji">🙋</div>
+      <div class="icebreaker-text">
+        코드편집기에서 AI를 써보신 분?
+        <span class="soft">VS Code, Cursor 등</span>
+      </div>
+    </div>
+    <div class="icebreaker-item">
+      <div class="icebreaker-emoji">🤔</div>
+      <div class="icebreaker-text">
+        AI 에이전트를 직접 만들 수 있다고 생각하시나요?
+        <span class="soft">오늘 끝나고 다시 여쭤볼게요</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5: 에이전트 미리 실행 -->
+<div class="slide slide--content" data-slide="5">
+  <div class="slide-header">
+    <div class="slide-number">05</div>
+    <h2 class="slide-title">먼저, 에이전트를 <span class="em">실행</span>해 놓겠습니다</h2>
+  </div>
+  <div class="center">
+    <img src="" alt="카드뉴스 에이전트" style="max-width: 600px; width: 100%; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 32px;" onerror="this.style.display='none'">
+    <div class="highlight-box mb-48" style="max-width: 700px;">
+      <div class="icon">🤖</div>
+      <div class="text">지금 에이전트를 실행해 놓으면,<br><strong>강의가 끝날 때쯤 결과물이 완성</strong>되어 있을 겁니다</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PART 1: AI 협업 설계 ===================== -->
+
+<!-- 6: Section -->
+<div class="slide slide--section" data-slide="6">
+  <div class="section-number">01</div>
+  <h2 class="section-title">AI 협업 설계</h2>
+  <p class="section-desc">AI를 도구가 아닌 팀원으로,<br>업무 방식 자체를 재설계합니다</p>
+</div>
+
+<!-- 7: AX적 사고란? -->
+<div class="slide slide--content" data-slide="7">
+  <div class="slide-header">
+    <div class="slide-number">07</div>
+    <h2 class="slide-title"><span class="em">AX</span>적 사고란?</h2>
+  </div>
+  <p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 40px;">
+    AX = AI Transformation — 단순 AI 활용을 넘어 시스템을 AI 중심으로 재설계하는 것
+  </p>
+  <div class="grid grid--3 mb-48">
+    <div class="card">
+      <div class="card-icon">🤝</div>
+      <div class="card-title">AI를 팀원으로</div>
+      <div class="card-desc">도구로 쓰는 게 아니라<br>의견을 묻고, 검토를 맡기고,<br>함께 결과물을 만듭니다</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔄</div>
+      <div class="card-title">워크플로우 재설계</div>
+      <div class="card-desc">기존 업무 흐름에 AI를 끼워넣는 게 아니라<br>AI 중심으로 처음부터 다시 짭니다</div>
+    </div>
+    <div class="card card--highlight">
+      <div class="card-icon">📈</div>
+      <div class="card-title">데이터로 개선</div>
+      <div class="card-desc">감이 아닌 결과 데이터로<br>프롬프트와 워크플로우를<br>계속 개선합니다</div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">💡</div>
+    <div class="text">AX의 출발점: <strong>"이 업무, AI가 대신할 수 있을까?"</strong>라고 매일 질문하는 것</div>
+  </div>
+</div>
+
+<!-- 8: Second Brain -->
+<div class="slide slide--content" data-slide="8">
+  <div class="slide-header">
+    <div class="slide-number">08</div>
+    <h2 class="slide-title">내 뇌의 한계를 <span class="em">확장</span>하다</h2>
+  </div>
+  <div class="two-col">
+    <div class="col">
+      <div class="col-label">Before — 내 뇌 혼자</div>
+      <div class="compare compare--before" style="flex: 1;">
+        <ul class="list">
+          <li>기억에 의존한 업무 관리</li>
+          <li>자료를 찾느라 시간 소모</li>
+          <li>반복 업무에 에너지 소진</li>
+          <li>한 번에 하나씩 순차 처리</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">After — Second Brain</div>
+      <div class="compare compare--after" style="flex: 1;">
+        <ul class="list list--highlight">
+          <li>파일로 정리 → AI가 즉시 검색·분석</li>
+          <li>구조화된 자료가 곧 AI의 연료</li>
+          <li>반복 업무는 에이전트에게 위임</li>
+          <li>여러 AI가 동시에 병렬 작업</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top: 32px;">
+    <div class="icon">🧠</div>
+    <div class="text">AI의 가능성을 직접 <strong>실험</strong>하고, 일하는 방식을 <strong>설계</strong>하고, AI를 핵심 <strong>파트너</strong>로 함께 하는 것</div>
+  </div>
+</div>
+
+<!-- 9: 3단계 프레임워크 -->
+<div class="slide slide--content" data-slide="9">
+  <div class="slide-header">
+    <div class="slide-number">09</div>
+    <h2 class="slide-title">코드편집기로 확장한 <span class="em">3단계</span></h2>
+  </div>
+  <div class="grid grid--3 mb-48">
+    <div class="card">
+      <div class="card-number">1</div>
+      <div class="card-icon">💬</div>
+      <div class="card-title">AI 활용</div>
+      <div class="card-desc">파일을 정리하면<br>AI가 알아서 읽고, 분석하고,<br>결과물을 만들어줍니다</div>
+    </div>
+    <div class="card">
+      <div class="card-number">2</div>
+      <div class="card-icon">🎨</div>
+      <div class="card-title">바이브코딩</div>
+      <div class="card-desc">"이렇게 만들어줘" 한 마디로<br>HTML 슬라이드, PDF 보고서,<br>웹페이지가 나옵니다</div>
+    </div>
+    <div class="card card--highlight">
+      <div class="card-number">3</div>
+      <div class="card-icon">🤖</div>
+      <div class="card-title">에이전트화</div>
+      <div class="card-desc">반복 업무를 AI 에이전트에게<br>완전히 맡기는 단계.<br>나만의 AI 마케팅 팀</div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">🎯</div>
+    <div class="text">오늘은 이 <strong>세 단계를 모두 경험</strong>합니다. 그리고 마지막에 실제로 에이전트를 만들어 봅니다.</div>
+  </div>
+</div>
+
+<!-- ===================== PART 2: 실전 작업 환경 ===================== -->
+
+<!-- 10: Section -->
+<div class="slide slide--section" data-slide="10">
+  <div class="section-number">02</div>
+  <h2 class="section-title">실전 작업 환경</h2>
+  <p class="section-desc">코드편집기가 낯설어도 괜찮습니다.<br>3개의 영역만 알면 됩니다</p>
+</div>
+
+<!-- 11: 왜 코드편집기인가? -->
+<div class="slide slide--content" data-slide="11">
+  <div class="slide-header">
+    <div class="slide-number">11</div>
+    <h2 class="slide-title">왜 <span class="em">코드편집기</span>인가?</h2>
+  </div>
+  <div class="grid grid--2 mb-48">
+    <div class="card">
+      <div class="card-icon">📂</div>
+      <div class="card-title">파일 기반 작업</div>
+      <div class="card-desc">폴더에 자료를 모으면 AI가 한번에 읽습니다.<br>ChatGPT에 하나씩 복붙하던 시절은 끝.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🤖</div>
+      <div class="card-title">AI 통합 환경</div>
+      <div class="card-desc">코파일럿, CLI 도구가 내장되어<br>파일을 고치고, 만들고, 실행까지 한 곳에서.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔄</div>
+      <div class="card-title">버전 관리</div>
+      <div class="card-desc">최종_최종_진짜최종.pptx 대신<br>Git으로 원클릭 복구. 실험이 자유로워집니다.</div>
+    </div>
+    <div class="card card--highlight">
+      <div class="card-icon">♻️</div>
+      <div class="card-title">재활용</div>
+      <div class="card-desc">한 번 정리한 자료로<br>슬라이드, 보고서, 웹페이지를 동시에 생성.</div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">💡</div>
+    <div class="text">코드를 <strong>쓰려고</strong> 코드편집기를 쓰는 게 아닙니다. AI와 <strong>협업하는 최적의 환경</strong>이기 때문입니다.</div>
+  </div>
+</div>
+
+<!-- 12: VS Code + Antigravity -->
+<div class="slide slide--content" data-slide="12">
+  <div class="slide-header">
+    <div class="slide-number">12</div>
+    <h2 class="slide-title">VS Code & <span class="em">Antigravity</span></h2>
+  </div>
+  <div class="two-col mb-32">
+    <div class="col">
+      <div class="col-label">VS Code</div>
+      <div class="card" style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+          <div style="font-size: 32px;">💻</div>
+          <div class="card-title" style="margin-bottom: 0;">Microsoft 무료 편집기</div>
+        </div>
+        <ul class="list">
+          <li>전 세계 개발자 70%+ 사용</li>
+          <li>Copilot 내장 (무료)</li>
+          <li>터미널에서 Claude Code, Gemini CLI 실행</li>
+          <li>확장 기능 무한</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">Antigravity</div>
+      <div class="card" style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+          <div style="font-size: 32px;">🚀</div>
+          <div class="card-title" style="margin-bottom: 0;">Google의 AI IDE</div>
+        </div>
+        <ul class="list list--highlight">
+          <li>Gemini 3.0 내장 (무료!)</li>
+          <li>플래닝 모드로 작업 계획 후 실행</li>
+          <li>MCP 서버 연결 (Google Workspace 등)</li>
+          <li>교차 검증에 활용 — Claude로 작업 → Gemini로 QA</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">🔀</div>
+    <div class="text">저는 <strong>둘 다 씁니다</strong>. Claude로 작업하고, Antigravity의 Gemini로 교차 검증하면 품질이 올라갑니다.</div>
+  </div>
+</div>
+
+<!-- 13: VS Code / Antigravity 화면 -->
+<div class="slide slide--content" data-slide="13">
+  <div class="slide-header">
+    <div class="slide-number">13</div>
+    <h2 class="slide-title">화면 구성: <span class="em">3개 영역</span>만 알면 됩니다</h2>
+  </div>
+  <div class="carousel-container">
+    <div class="carousel" id="imageCarousel">
+      <div class="carousel-item" onclick="openLightbox(0)">
+        <img src="" alt="VS Code 첫화면" onerror="this.style.display='none'">
+      </div>
+      <div class="carousel-item" onclick="openLightbox(1)">
+        <img src="" alt="VS Code 작업화면" onerror="this.style.display='none'">
+      </div>
+      <div class="carousel-item" onclick="openLightbox(2)">
+        <img src="" alt="Antigravity 첫화면" onerror="this.style.display='none'">
+      </div>
+      <div class="carousel-item" onclick="openLightbox(3)">
+        <img src="" alt="Antigravity 작업화면" onerror="this.style.display='none'">
+      </div>
+    </div>
+    <div class="carousel-hint">← 스크롤하거나 클릭해서 확대 →</div>
+    <div class="carousel-nav">
+      <button class="carousel-nav-btn" onclick="scrollCarousel(-1)">←</button>
+      <button class="carousel-nav-btn" onclick="scrollCarousel(1)">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- 14: Markdown + CSV -->
+<div class="slide slide--content" data-slide="14">
+  <div class="slide-header">
+    <div class="slide-number">14</div>
+    <h2 class="slide-title">AI가 가장 잘 이해하는 <span class="em">포맷</span></h2>
+  </div>
+  <div class="two-col mb-32">
+    <div class="col">
+      <div class="col-label">Markdown (.md)</div>
+      <div class="code" style="flex: 1;">
+        <span class="hl"># 제목</span><br>
+        <span class="hl">## 소제목</span><br>
+        <span class="dim">- 목록 항목</span><br>
+        <span class="dim">- **굵게** / *기울임*</span><br>
+        <span class="dim">| 표 | 데이터 |</span><br><br>
+        <span class="hl">그게 전부입니다.</span>
+      </div>
+      <p style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">노션도 마크다운 기반. 어디서든 열리고, AI가 가장 좋아하는 형식.</p>
+    </div>
+    <div class="col">
+      <div class="col-label">CSV (.csv)</div>
+      <div class="code" style="flex: 1;">
+        <span class="hl">이름,직무,사용도구</span><br>
+        <span class="dim">김은주,마케터,Claude</span><br>
+        <span class="dim">김철수,기획자,ChatGPT</span><br>
+        <span class="dim">이영희,디자이너,Midjourney</span><br><br>
+        <span class="hl">엑셀 → 다른 이름으로 저장 → CSV</span>
+      </div>
+      <p style="margin-top: 12px; font-size: 14px; color: var(--text-muted);">엑셀과 완벽 호환. 가볍고 AI 분석에 최적.</p>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">📁</div>
+    <div class="text">업무 자료를 <strong>MD와 CSV로 정리</strong>해두면, AI에게 "이 폴더 분석해줘" 한 마디로 끝납니다.</div>
+  </div>
+</div>
+
+<!-- 15: 폴더 구조 + Git + 터미널 -->
+<div class="slide slide--content" data-slide="15">
+  <div class="slide-header">
+    <div class="slide-number">15</div>
+    <h2 class="slide-title">프로젝트 <span class="em">폴더 구조</span></h2>
+  </div>
+  <div class="two-col">
+    <div class="col">
+      <div class="col-label">핵심 폴더 구조</div>
+      <div class="code" style="flex: 1; font-size: 15px;">
+        <span class="hl">📂 my-project/</span><br>
+        <span class="dim">├── 📂 input/</span> <span class="dim" style="margin-left: 16px;">← 재료 (PDF, CSV, MD)</span><br>
+        <span class="dim">├── 📂 output/</span> <span class="dim" style="margin-left: 16px;">← 결과물</span><br>
+        <span class="dim">├── 📂 reference/</span> <span class="dim" style="margin-left: 16px;">← 참고 자료</span><br>
+        <span class="dim">├── 📄 PRD.md</span> <span class="dim" style="margin-left: 16px;">← AI 주문서</span><br>
+        <span class="dim">└── 📄 CLAUDE.md</span> <span class="dim" style="margin-left: 16px;">← AI 맥락 파일</span>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">알아두면 좋은 것</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">📟</div>
+          <div class="step-content">
+            <div class="step-title">터미널</div>
+            <div class="step-desc">텍스트로 컴퓨터와 소통. Claude Code, Gemini CLI를 실행하는 곳.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">🔀</div>
+          <div class="step-content">
+            <div class="step-title">Git</div>
+            <div class="step-desc">파일 변경 이력을 자동 기록. 언제든 이전 버전으로 복구 가능.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">💡</div>
+          <div class="step-content">
+            <div class="step-title">폴더명 팁</div>
+            <div class="step-desc">영문 + 대시로 만들기 (띄어쓰기 X). AI가 파일을 잘 찾습니다.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PART 3: 바이브코딩 ===================== -->
+
+<!-- 16: Section -->
+<div class="slide slide--section" data-slide="16">
+  <div class="section-number">03</div>
+  <h2 class="section-title">바이브코딩</h2>
+  <p class="section-desc">코드를 직접 쓰지 않아도,<br>"이렇게 만들어줘" 한 마디면 결과물이 나옵니다</p>
+</div>
+
+<!-- 17: 바이브코딩이란? -->
+<div class="slide slide--content" data-slide="17">
+  <div class="slide-header">
+    <div class="slide-number">17</div>
+    <h2 class="slide-title"><span class="em">바이브코딩</span>이란?</h2>
+  </div>
+  <div class="center">
+    <p style="font-size: 22px; color: var(--text-secondary); max-width: 800px; margin-bottom: 48px; line-height: 1.8;">
+      Andrej Karpathy(前 Tesla AI 디렉터)가 명명한 개념.<br>
+      <strong style="color: var(--text); font-size: 26px;">자연어로 의도를 설명하면 AI가 코드를 작성하는 방식.</strong>
+    </p>
+    <div class="grid grid--3" style="max-width: 900px;">
+      <div class="card card--sm">
+        <div class="card-icon">💬</div>
+        <div class="card-title">말로 지시</div>
+        <div class="card-desc">"네이비 톤으로<br>발표 슬라이드 만들어줘"</div>
+      </div>
+      <div class="card card--sm">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">AI가 생성</div>
+        <div class="card-desc">HTML, PDF, 웹페이지<br>30초 만에 초안 완성</div>
+      </div>
+      <div class="card card--sm">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">핑퐁으로 완성</div>
+        <div class="card-desc">피드백 → 수정 → 반복<br>5분이면 전체 완성</div>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top: 40px;">
+    <div class="icon">🎯</div>
+    <div class="text">이 발표 슬라이드도 바이브코딩으로 만들었습니다. <strong>코드를 한 줄도 직접 쓰지 않았습니다.</strong></div>
+  </div>
+</div>
+
+<!-- 18: PRD -->
+<div class="slide slide--content" data-slide="18">
+  <div class="slide-header">
+    <div class="slide-number">18</div>
+    <h2 class="slide-title">PRD — AI에게 보내는 <span class="em">주문서</span></h2>
+  </div>
+  <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 32px;">
+    Product Requirements Document. PM이 개발자에게 주는 문서를, AI에게 보내는 것.
+  </p>
+  <div class="two-col">
+    <div class="col">
+      <div class="col-label">핵심 3요소</div>
+      <div class="steps" style="flex: 1;">
+        <div class="step">
+          <div class="step-num">🎯</div>
+          <div class="step-content">
+            <div class="step-title">왜 만드는가? (목적)</div>
+            <div class="step-desc">"모두콘 홍보를 위한 다채널 콘텐츠 생성"</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">👤</div>
+          <div class="step-content">
+            <div class="step-title">누구를 위한 건가? (대상)</div>
+            <div class="step-desc">"AI에 관심 있는 현업 마케터 30~40대"</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">📄</div>
+          <div class="step-content">
+            <div class="step-title">어떤 형태로 나와야 하는가? (결과물)</div>
+            <div class="step-desc">"인스타 피드, 블로그, 이메일 등 11개 채널별 마크다운"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">PRD 작성 팁</div>
+      <div class="card" style="flex: 1;">
+        <ul class="list">
+          <li>처음부터 완벽하게 쓰지 않아도 됩니다</li>
+          <li>아이디어를 AI에게 말하고 "PRD로 정리해줘"</li>
+          <li>핑퐁하면서 PRD를 함께 개선</li>
+          <li><strong style="color: var(--text);">PRD를 한 번쯤 끝까지 읽어보세요</strong> — 에이전트 이해도가 확 올라갑니다</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 19: 프롬프트 작성 핵심 -->
+<div class="slide slide--content" data-slide="19">
+  <div class="slide-header">
+    <div class="slide-number">19</div>
+    <h2 class="slide-title">프롬프트 작성의 <span class="em">핵심</span></h2>
+  </div>
+  <div class="two-col mb-32">
+    <div class="col">
+      <div class="col-label">하지 마세요</div>
+      <div class="compare compare--before" style="flex: 1;">
+        <ul class="list">
+          <li>"예쁘게 만들어줘"</li>
+          <li>"좋은 느낌으로 해줘"</li>
+          <li>"알아서 잘 해줘"</li>
+          <li>문법이나 어순 완벽하게 다듬기</li>
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">이렇게 하세요</div>
+      <div class="compare compare--after" style="flex: 1;">
+        <ul class="list list--highlight">
+          <li>"네이비+미니멀+여백 넉넉하게"</li>
+          <li>"애플 키노트 스타일로"</li>
+          <li>"HTML 슬라이드 38장, 다크 테마"</li>
+          <li><strong style="color: var(--text);">하고 싶은 말을 다 하세요</strong> — AI는 문맥을 읽습니다</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">💬</div>
+    <div class="text">사람에게 말할 때는 조심스러워도, AI에게는 <strong>하고 싶은 말을 전부</strong> 하세요. 틀려도 다시 말하면 됩니다.</div>
+  </div>
+</div>
+
+<!-- 20: 실전 사례 — 모두콘 -->
+<div class="slide slide--content" data-slide="20">
+  <div class="slide-header">
+    <div class="slide-number">20</div>
+    <h2 class="slide-title">실전 사례: <span class="em">모두콘</span></h2>
+  </div>
+  <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 32px;">
+    하나의 폴더에 자료를 모아놓고, 여러 형태의 결과물을 동시에 생성
+  </p>
+  <div class="flow mb-32">
+    <div class="flow-item">
+      <div class="flow-label">📂 INPUT</div>
+      <div class="flow-desc">세션 정보 CSV<br>연사 소개 MD<br>행사 기본 정보</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item flow-item--highlight">
+      <div class="flow-label">🤖 바이브코딩</div>
+      <div class="flow-desc">AI가 자료를 읽고<br>결과물 생성</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item">
+      <div class="flow-label">📤 OUTPUT</div>
+      <div class="flow-desc">홍보 문구 · 트렌드리포트<br>프로그램북 · 카드뉴스<br>인증서 · 웹페이지</div>
+    </div>
+  </div>
+  <div class="grid grid--4">
+    <div class="card card--sm">
+      <div class="card-icon">📱</div>
+      <div class="card-title">다채널 홍보문구</div>
+      <div class="card-desc">세션별 맞춤 카피</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">📊</div>
+      <div class="card-title">트렌드 리포트</div>
+      <div class="card-desc">HTML 문서</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">📋</div>
+      <div class="card-title">프로그램북</div>
+      <div class="card-desc">PDF 출력 가능</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">🏆</div>
+      <div class="card-title">인증서 시스템</div>
+      <div class="card-desc">자동 생성</div>
+    </div>
+  </div>
+</div>
+
+<!-- 21: MD로 내용 먼저 -->
+<div class="slide slide--content" data-slide="21">
+  <div class="slide-header">
+    <div class="slide-number">21</div>
+    <h2 class="slide-title">결과물 형태 정하기 + <span class="em">MD 먼저</span></h2>
+  </div>
+  <div class="two-col mb-32">
+    <div class="col">
+      <div class="col-label">Step 1 — 결과물 형태 선택</div>
+      <div class="grid grid--2" style="flex: 1;">
+        <div class="card card--sm">
+          <div class="card-icon">🖥️</div>
+          <div class="card-title">HTML</div>
+          <div class="card-desc">슬라이드, 대시보드<br>브라우저에서 바로 확인</div>
+        </div>
+        <div class="card card--sm">
+          <div class="card-icon">📄</div>
+          <div class="card-title">PDF</div>
+          <div class="card-desc">보고서, 제안서<br>인쇄 · 공유 용이</div>
+        </div>
+        <div class="card card--sm">
+          <div class="card-icon">📊</div>
+          <div class="card-title">PPTX</div>
+          <div class="card-desc">프레젠테이션<br>기존 워크플로우 호환</div>
+        </div>
+        <div class="card card--sm">
+          <div class="card-icon">🌐</div>
+          <div class="card-title">웹페이지</div>
+          <div class="card-desc">GitHub Pages로<br>무료 배포 가능</div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">Step 2 — 수정 횟수를 줄이는 비결</div>
+      <div class="steps" style="flex: 1;">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">MD로 내용부터 확정</div>
+            <div class="step-desc">디자인 전에 구조와 내용을 먼저 잡기</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">타이틀 슬라이드 먼저</div>
+            <div class="step-desc">디자인 톤을 2~3장으로 먼저 확인</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">같은 스타일로 확장</div>
+            <div class="step-desc">톤이 정해지면 나머지 섹션 추가</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">💡</div>
+    <div class="text">38장을 다 만들고 디자인 수정하면 지옥입니다. <strong>2~3장 먼저 디자인 확정</strong> → 나머지 확장이 핵심.</div>
+  </div>
+</div>
+
+<!-- 22: AI와 핑퐁 -->
+<div class="slide slide--content" data-slide="22">
+  <div class="slide-header">
+    <div class="slide-number">22</div>
+    <h2 class="slide-title">AI와 <span class="em">핑퐁</span>하며 완성하기</h2>
+  </div>
+  <div class="center">
+    <div class="flow mb-48" style="flex-wrap: wrap;">
+      <div class="flow-item">
+        <div class="flow-label">💬 지시</div>
+        <div class="flow-desc">"이렇게 만들어줘"</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">
+        <div class="flow-label">⚡ AI 초안</div>
+        <div class="flow-desc">30초 만에 생성</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">
+        <div class="flow-label">👀 검토</div>
+        <div class="flow-desc">결과물 확인</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item flow-item--highlight">
+        <div class="flow-label">🔄 피드백</div>
+        <div class="flow-desc">"여기 수정해줘"</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">
+        <div class="flow-label">✅ 완성</div>
+        <div class="flow-desc">5분이면 끝</div>
+      </div>
+    </div>
+    <div class="grid grid--3" style="max-width: 900px;">
+      <div class="card card--sm">
+        <div class="card-icon">📸</div>
+        <div class="card-title">스크린샷 피드백</div>
+        <div class="card-desc">"이 부분 여백 좁혀줘"<br>화면 캡처해서 보여주면 정확</div>
+      </div>
+      <div class="card card--sm">
+        <div class="card-icon">❓</div>
+        <div class="card-title">질문 요청하기</div>
+        <div class="card-desc">모르겠으면 "질문 많이 해줘"<br>AI가 필요한 걸 물어봅니다</div>
+      </div>
+      <div class="card card--sm">
+        <div class="card-icon">🎯</div>
+        <div class="card-title">포기하지 않기</div>
+        <div class="card-desc">처음엔 수정이 많아도<br>감이 잡히면 급격히 줄어듭니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PART 4: AI 에이전트 ===================== -->
+
+<!-- 23: Section -->
+<div class="slide slide--section" data-slide="23">
+  <div class="section-number">04</div>
+  <h2 class="section-title">AI 에이전트</h2>
+  <p class="section-desc">매번 직접 시키지 않아도,<br>AI가 알아서 반복 업무를 처리하는 "나만의 AI 마케팅 팀"</p>
+</div>
+
+<!-- 24: AI 활용의 3단계 진화 -->
+<div class="slide slide--content" data-slide="24">
+  <div class="slide-header">
+    <div class="slide-number">24</div>
+    <h2 class="slide-title">AI 활용의 <span class="em">3단계 진화</span></h2>
+  </div>
+  <div class="grid grid--3 mb-48">
+    <div class="card">
+      <div class="card-number">1</div>
+      <div class="card-icon">💬</div>
+      <div class="card-title">챗봇</div>
+      <div class="card-desc">질문하면 답변<br>검색 대체 수준<br><br><span style="color: var(--text-muted);">🐢 수동적</span></div>
+    </div>
+    <div class="card">
+      <div class="card-number">2</div>
+      <div class="card-icon">🤝</div>
+      <div class="card-title">코파일럿</div>
+      <div class="card-desc">실시간 제안 & 도움<br>사람이 주도, AI가 서포트<br><br><span style="color: var(--text-muted);">🚶 반자동</span></div>
+    </div>
+    <div class="card card--highlight">
+      <div class="card-number">3</div>
+      <div class="card-icon">🤖</div>
+      <div class="card-title">에이전트</div>
+      <div class="card-desc">목표 설정 → 계획 → 실행<br>AI가 주도, 사람이 감독<br><br><span style="color: var(--text);">🚀 능동적</span></div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">📊</div>
+    <div class="text">지금 ChatGPT, Claude, Gemini는 이미 <strong>에이전트 기능을 내장</strong>하고 있습니다. 질문만 하면 손해.</div>
+  </div>
+</div>
+
+<!-- 25: AI 에이전트란? -->
+<div class="slide slide--content" data-slide="25">
+  <div class="slide-header">
+    <div class="slide-number">25</div>
+    <h2 class="slide-title">AI <span class="em">에이전트</span>란?</h2>
+  </div>
+  <div class="center">
+    <p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 40px;">스스로 생각하고, 판단하고, 행동하는 AI 프로그램</p>
+    <div class="flow mb-48">
+      <div class="flow-item">
+        <div class="flow-label">👁️ 환경 인식</div>
+        <div class="flow-desc">파일·데이터를 읽음</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item">
+        <div class="flow-label">🧠 판단</div>
+        <div class="flow-desc">어떻게 처리할지 결정</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item flow-item--highlight">
+        <div class="flow-label">⚡ 행동</div>
+        <div class="flow-desc">파일 생성·수정·실행</div>
+      </div>
+    </div>
+    <div class="two-col" style="max-width: 900px;">
+      <div class="col">
+        <div class="col-label">챗봇</div>
+        <div class="compare compare--before">
+          <ul class="list">
+            <li>질문하면 답변만 함</li>
+            <li>한 번에 하나의 작업</li>
+            <li>사람이 계속 지시해야 함</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col">
+        <div class="col-label">에이전트</div>
+        <div class="compare compare--after">
+          <ul class="list list--highlight">
+            <li>목표 주면 알아서 실행</li>
+            <li>여러 단계를 자동 수행</li>
+            <li>실패하면 스스로 재시도</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-box" style="margin-top: 32px;">
+      <div class="icon">💡</div>
+      <div class="text"><strong>지금 떠올려 보세요</strong> — 자동화하고 싶은 반복 업무 하나.<br>그 업무의 입력·처리·출력을 정리하면 에이전트의 시작입니다.</div>
+    </div>
+  </div>
+</div>
+
+<!-- 26: 프로그램 핵심 원리 -->
+<div class="slide slide--content" data-slide="26">
+  <div class="slide-header">
+    <div class="slide-number">26</div>
+    <h2 class="slide-title">프로그램의 <span class="em">핵심 원리</span></h2>
+  </div>
+  <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; text-align: center;">
+    모든 프로그램과 에이전트는 이 구조를 따릅니다
+  </p>
+  <div class="flow mb-32">
+    <div class="flow-item">
+      <div class="flow-label">📥 입력</div>
+      <div class="flow-desc">Input</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item flow-item--highlight">
+      <div class="flow-label">⚙️ 처리</div>
+      <div class="flow-desc">Process</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item">
+      <div class="flow-label">📤 출력</div>
+      <div class="flow-desc">Output</div>
+    </div>
+  </div>
+  <div class="grid grid--3 mb-32">
+    <div class="card card--sm">
+      <div class="card-icon">📥</div>
+      <div class="card-title">입력 정의</div>
+      <div class="card-desc">무엇을 받을 것인가?<br>(홍보할 강의 정보, 타겟 등)</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">처리 로직</div>
+      <div class="card-desc">어떻게 변환할 것인가?<br>(채널별 톤·형식에 맞게 변환)</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">📤</div>
+      <div class="card-title">출력 형태</div>
+      <div class="card-desc">무엇을 만들 것인가?<br>(11개 채널별 홍보 문구)</div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">💡</div>
+    <div class="text">이 <strong>입력 → 처리 → 출력</strong> 구조를 이해하면 에이전트 설계가 쉬워집니다</div>
+  </div>
+</div>
+
+<!-- 27: 업무를 파이프라인으로 설계 -->
+<div class="slide slide--content" data-slide="27">
+  <div class="slide-header">
+    <div class="slide-number">27</div>
+    <h2 class="slide-title">업무를 <span class="em">파이프라인</span>으로 설계</h2>
+  </div>
+  <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 32px; text-align: center;">
+    재료를 넣으면 결과물이 나오는 자동화된 흐름을 만듭니다
+  </p>
+  <div class="flow mb-32">
+    <div class="flow-item">
+      <div class="flow-label">📂 INPUT</div>
+      <div class="flow-desc">재료/데이터/맥락</div>
+    </div>
+    <div class="flow-arrow">+</div>
+    <div class="flow-item flow-item--highlight">
+      <div class="flow-label">🤖 AI Agent</div>
+      <div class="flow-desc">자율 수행</div>
+    </div>
+    <div class="flow-arrow">=</div>
+    <div class="flow-item">
+      <div class="flow-label">📄 OUTPUT</div>
+      <div class="flow-desc">결과물/가치</div>
+    </div>
+  </div>
+  <div class="grid grid--3 mb-32">
+    <div class="card card--sm">
+      <div class="card-icon">🏗️</div>
+      <div class="card-title">구조 설계</div>
+      <div class="card-desc">AI가 일할 판을 짠다</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">🔗</div>
+      <div class="card-title">단계 연결</div>
+      <div class="card-desc">여러 단계를 연결</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">👁️</div>
+      <div class="card-title">최종 감독</div>
+      <div class="card-desc">품질 검수 및 피드백</div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">💡</div>
+    <div class="text">일이 자동으로 흘러가는 <strong>길(Pipeline)을 뚫는 것</strong>이 에이전트의 가치</div>
+  </div>
+</div>
+
+<!-- 28: Anthropic 3원칙 + 5패턴 -->
+<div class="slide slide--content" data-slide="28">
+  <div class="slide-header">
+    <div class="slide-number">28</div>
+    <h2 class="slide-title">Anthropic의 에이전트 구축 <span class="em">3원칙</span></h2>
+  </div>
+  <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 40px; text-align: center;">
+    "가장 단순한 해결책으로 시작하고, 결과가 개선될 때만 복잡성을 추가하라"
+  </p>
+  <div class="grid grid--3 mb-32">
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <div class="card-title">단순하게 시작</div>
+      <div class="card-desc">복잡한 프레임워크 대신<br>기본부터. 처음부터<br>완벽할 필요 없습니다.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">📊</div>
+      <div class="card-title">결과로 검증</div>
+      <div class="card-desc">과정이 아닌<br>결과물의 품질로 측정.<br>실행해보고 판단.</div>
+    </div>
+    <div class="card card--highlight">
+      <div class="card-icon">📈</div>
+      <div class="card-title">점진적 고도화</div>
+      <div class="card-desc">필요가 증명될 때만<br>복잡성 추가.<br>5↔6단계 반복이 핵심.</div>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">🔄</div>
+    <div class="text"><strong>단순 → 실행 → 개선</strong> 이 사이클을 빠르게 반복하는 것이 핵심입니다</div>
+  </div>
+</div>
+
+<!-- 29: 에이전트 만드는 순서 -->
+<div class="slide slide--content" data-slide="29">
+  <div class="slide-header">
+    <div class="slide-number">29</div>
+    <h2 class="slide-title">에이전트 <span class="em">만드는 순서</span></h2>
+  </div>
+  <div class="flow mb-32" style="flex-wrap: wrap;">
+    <div class="flow-item">
+      <div class="flow-label">💡 아이디어</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item">
+      <div class="flow-label">📄 PRD 작성</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item">
+      <div class="flow-label">🤖 AI에게 요청</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item">
+      <div class="flow-label">💻 코드 생성</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item flow-item--highlight">
+      <div class="flow-label">🔄 테스트/수정</div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="col">
+      <div class="col-label">AI에게 이렇게 말하세요</div>
+      <div class="code" style="font-size: 14px; line-height: 2; flex: 1;">
+        <span class="hl">코드 요청:</span><br>
+        "이 PRD대로 에이전트 코드 만들어줘"<br><br>
+        <span class="hl">테스트 요청:</span><br>
+        "실행해서 테스트해봐"<br><br>
+        <span class="hl">수정 요청:</span><br>
+        "출력 형식이 좀 달라, 이렇게 바꿔줘"<br><br>
+        <span class="hl">에러 발생 시:</span><br>
+        "이런 에러가 났어, 고쳐줘"
+      </div>
+    </div>
+    <div class="col">
+      <div class="col-label">반복의 핵심</div>
+      <div style="display: flex; flex-direction: column; gap: 16px; flex: 1;">
+        <div class="card card--sm">
+          <div class="card-icon">🧪</div>
+          <div class="card-title">테스트</div>
+          <div class="card-desc">실행해서 결과 확인</div>
+        </div>
+        <div class="card card--sm">
+          <div class="card-icon">💬</div>
+          <div class="card-title">피드백</div>
+          <div class="card-desc">부족한 점 구체적으로 전달</div>
+        </div>
+        <div class="card card--sm">
+          <div class="card-icon">🔧</div>
+          <div class="card-title">수정</div>
+          <div class="card-desc">AI가 즉시 반영</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PART 5: 라이브 데모 ===================== -->
+
+<!-- 30: Section -->
+<div class="slide slide--section" data-slide="30">
+  <div class="section-number">05</div>
+  <h2 class="section-title">라이브 데모</h2>
+  <p class="section-desc">다채널 홍보 에이전트를<br>지금 바로, 처음부터 만들어 봅니다</p>
+</div>
+
+<!-- 31: 다채널 홍보 에이전트 소개 -->
+<div class="slide slide--content" data-slide="31">
+  <div class="slide-header">
+    <div class="slide-number">31</div>
+    <h2 class="slide-title">다채널 홍보 <span class="em">에이전트</span></h2>
+  </div>
+  <p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 32px; text-align: center;">
+    홍보할 정보 하나를 넣으면, 11개 채널에 맞춤화된 콘텐츠가 자동 생성됩니다
+  </p>
+  <div class="flow mb-32">
+    <div class="flow-item">
+      <div class="flow-label">📄 강의 정보</div>
+      <div class="flow-desc">모두연 강의 홍보<br>MD 파일 1개</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item flow-item--highlight">
+      <div class="flow-label">🤖 홍보 에이전트</div>
+      <div class="flow-desc">채널별 톤·형식<br>자동 변환</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item">
+      <div class="flow-label">📤 11개 채널</div>
+      <div class="flow-desc">콘텐츠 + 이미지<br>프롬프트 포함</div>
+    </div>
+  </div>
+  <div class="grid grid--4">
+    <div class="card card--sm"><div class="card-icon">📷</div><div class="card-title">인스타 피드</div></div>
+    <div class="card card--sm"><div class="card-icon">📱</div><div class="card-title">인스타 스토리</div></div>
+    <div class="card card--sm"><div class="card-icon">▶️</div><div class="card-title">유튜브 커뮤니티</div></div>
+    <div class="card card--sm"><div class="card-icon">📝</div><div class="card-title">블로그</div></div>
+    <div class="card card--sm"><div class="card-icon">💼</div><div class="card-title">링크드인</div></div>
+    <div class="card card--sm"><div class="card-icon">💬</div><div class="card-title">슬랙</div></div>
+    <div class="card card--sm"><div class="card-icon">💛</div><div class="card-title">카카오톡 채널</div></div>
+    <div class="card card--sm"><div class="card-icon">🗨️</div><div class="card-title">오픈채팅</div></div>
+    <div class="card card--sm"><div class="card-icon">📧</div><div class="card-title">이메일</div></div>
+    <div class="card card--sm"><div class="card-icon">🧵</div><div class="card-title">스레드</div></div>
+    <div class="card card--sm"><div class="card-icon">🎫</div><div class="card-title">이벤트 페이지</div></div>
+  </div>
+</div>
+
+<!-- 32: PRD 살펴보기 -->
+<div class="slide slide--content" data-slide="32">
+  <div class="slide-header">
+    <div class="slide-number">32</div>
+    <h2 class="slide-title">PRD <span class="em">살펴보기</span></h2>
+  </div>
+  <p style="font-size: 16px; color: var(--text-secondary); margin-bottom: 24px;">
+    이 에이전트의 설계도를 먼저 확인합니다
+  </p>
+  <div class="code" style="font-size: 14px; line-height: 1.9; max-height: 60vh; overflow-y: auto;">
+    <span class="hl"># 다채널 홍보 콘텐츠 생성 에이전트</span><br><br>
+    <span class="hl">## 목적</span><br>
+    <span class="dim">홍보할 정보를 입력받아 11개 채널에 맞춤화된</span><br>
+    <span class="dim">홍보 문구를 자동 생성하고, 마크다운 파일로 출력</span><br><br>
+    <span class="hl">## 사용 방식</span><br>
+    <span class="dim">1. 홍보할 정보를 마크다운 파일로 작성</span><br>
+    <span class="dim">2. input/ 폴더에 저장</span><br>
+    <span class="dim">3. CLI AI 도구로 에이전트 실행</span><br>
+    <span class="dim">4. output/ 폴더에 결과물 생성</span><br><br>
+    <span class="hl">## 대상 채널 (11개)</span><br>
+    <span class="dim">인스타 피드/스토리, 유튜브, 블로그, 링크드인,</span><br>
+    <span class="dim">슬랙, 카카오톡 채널/오픈채팅, 이메일, 스레드, 이벤트 페이지</span><br><br>
+    <span class="hl">## 출력 규칙</span><br>
+    <span class="dim">- 채널별 적합한 비율의 이미지 생성 프롬프트 포함</span><br>
+    <span class="dim">- input/output 폴더 구분</span><br>
+    <span class="dim">- 볼드(*) 표시 사용 금지</span>
+  </div>
+</div>
+
+<!-- 33: 라이브 데모 화면 -->
+<div class="slide slide--cover" data-slide="33">
+  <div style="font-size: 48px; margin-bottom: 24px;">💻</div>
+  <div class="cover-title" style="font-size: 48px;">라이브 데모</div>
+  <div class="cover-subtitle">Claude Code에서 에이전트를 만들고 실행합니다</div>
+  <div class="grid grid--4" style="max-width: 800px; margin-top: 48px;">
+    <div class="card card--sm" style="text-align: center;">
+      <div class="card-icon">📄</div>
+      <div class="card-title">PRD 전달</div>
+    </div>
+    <div class="card card--sm" style="text-align: center;">
+      <div class="card-icon">💻</div>
+      <div class="card-title">코드 생성</div>
+    </div>
+    <div class="card card--sm" style="text-align: center;">
+      <div class="card-icon">▶️</div>
+      <div class="card-title">에이전트 실행</div>
+    </div>
+    <div class="card card--sm" style="text-align: center;">
+      <div class="card-icon">✅</div>
+      <div class="card-title">결과 확인</div>
+    </div>
+  </div>
+</div>
+
+<!-- 34: 에이전트 결과 확인 -->
+<div class="slide slide--content" data-slide="34">
+  <div class="slide-header">
+    <div class="slide-number">34</div>
+    <h2 class="slide-title">에이전트 <span class="em">결과 확인</span></h2>
+  </div>
+  <div class="center">
+    <div class="highlight-box mb-48" style="max-width: 700px;">
+      <div class="icon">⏱️</div>
+      <div class="text">발표 시작할 때 실행한 에이전트, <strong>지금 결과를 확인합니다</strong></div>
+    </div>
+    <div class="grid grid--3" style="max-width: 900px;">
+      <div class="card card--sm">
+        <div class="card-icon">📥</div>
+        <div class="card-title">입력 확인</div>
+        <div class="card-desc">어떤 파일을 읽었는가</div>
+      </div>
+      <div class="card card--sm">
+        <div class="card-icon">📄</div>
+        <div class="card-title">생성 파일</div>
+        <div class="card-desc">어떤 파일이 만들어졌는가</div>
+      </div>
+      <div class="card card--sm">
+        <div class="card-icon">✅</div>
+        <div class="card-title">완성도</div>
+        <div class="card-desc">11개 채널 콘텐츠 품질</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CLOSING ===================== -->
+
+<!-- 35: 3단계 한눈에 보기 -->
+<div class="slide slide--content" data-slide="35">
+  <div class="slide-header">
+    <div class="slide-number">35</div>
+    <h2 class="slide-title"><span class="em">3단계</span> 한눈에 보기</h2>
+  </div>
+  <div class="mb-48" style="flex: 1;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th></th>
+          <th>① AI 활용</th>
+          <th>② 바이브코딩</th>
+          <th>③ 에이전트화</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>한 줄 요약</td>
+          <td>AI와 대화하며 일하기</td>
+          <td>말로 문서·서비스 만들기</td>
+          <td>반복 업무를 AI 팀에게 맡기기</td>
+        </tr>
+        <tr>
+          <td>핵심 스킬</td>
+          <td>MD/CSV 정리, 파일 기반 작업</td>
+          <td>PRD 작성, 핑퐁 반복</td>
+          <td>에이전트 설계, 성과 학습</td>
+        </tr>
+        <tr>
+          <td>결과물</td>
+          <td>정리된 자료 + AI 분석</td>
+          <td>HTML/PDF/PPT 문서</td>
+          <td>자동화된 워크플로우</td>
+        </tr>
+        <tr>
+          <td>난이도</td>
+          <td>⭐ 쉬움</td>
+          <td>⭐⭐ 보통</td>
+          <td>⭐⭐⭐ 도전</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="highlight-box">
+    <div class="icon">🎯</div>
+    <div class="text">마케터의 경쟁력 = <strong>좋은 아이디어</strong> + <strong>빠른 실행 시스템</strong></div>
+  </div>
+</div>
+
+<!-- 36: 오늘부터 시작하기 -->
+<div class="slide slide--content" data-slide="36">
+  <div class="slide-header">
+    <div class="slide-number">36</div>
+    <h2 class="slide-title"><span class="em">오늘부터</span> 시작하기</h2>
+  </div>
+  <div class="steps mb-48">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">VS Code 또는 Antigravity 설치</div>
+        <div class="step-desc">3분이면 끝. 무료, 모든 OS 지원</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">반복 업무 하나 선택</div>
+        <div class="step-desc">카피라이팅, 캘린더 관리, 리포트 등</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">AI에게 시켜보기</div>
+        <div class="step-desc">"이 파일 분석해줘" 한 마디면 시작</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid--4">
+    <div class="card card--sm">
+      <div class="card-icon">💻</div>
+      <div class="card-title">VS Code</div>
+      <div class="card-desc">무료, 모든 OS</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">🚀</div>
+      <div class="card-title">Antigravity</div>
+      <div class="card-desc">Gemini 내장, 무료</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">📝</div>
+      <div class="card-title">Markdown</div>
+      <div class="card-desc"># - | 끝</div>
+    </div>
+    <div class="card card--sm">
+      <div class="card-icon">📊</div>
+      <div class="card-title">CSV</div>
+      <div class="card-desc">엑셀 → 저장</div>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top: 24px;">
+    <div class="icon">📦</div>
+    <div class="text">오늘 강의 자료(PRD 작성법, 폴더 구조, 프롬프트 팁)를 <strong>정리해서 공유</strong>해 드리겠습니다</div>
+  </div>
+</div>
+
+<!-- 37: 다시 질문 -->
+<div class="slide slide--content" data-slide="37">
+  <div class="slide-header">
+    <div class="slide-number">37</div>
+    <h2 class="slide-title">다시 <span class="em">여쭤볼게요</span></h2>
+  </div>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <div class="icebreaker-item">
+      <div class="icebreaker-emoji">🙋</div>
+      <div class="icebreaker-text">
+        이제 AI 에이전트를 직접 만들 수 있을 것 같으신가요?
+      </div>
+    </div>
+    <div class="icebreaker-item">
+      <div class="icebreaker-emoji">💡</div>
+      <div class="icebreaker-text">
+        AI가 내 일을 대체하는 게 아니라,<br>내가 AI를 부리는 겁니다
+        <span class="soft">코딩 몰라도 됩니다</span>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top: 40px;">
+    <div class="icon">🎯</div>
+    <div class="text">경쟁력은 "프롬프트를 잘 쓰는 사람"에서 <strong>"워크플로우를 잘 설계하는 사람"</strong>으로 이동하고 있습니다</div>
+  </div>
+</div>
+
+<!-- 38: Q&A -->
+<div class="slide slide--cover" data-slide="38">
+  <div class="qa-message">
+    에이전트는 한 번에 완성되지 않는다.<br>
+    자료수집 → 대화 → 개발 → 테스트 → <strong>개선의 반복</strong>이다.
+  </div>
+  <div class="qa-title">Q&A</div>
+  <div class="qa-subtitle">질문 있으신가요?</div>
+</div>
+
+</div><!-- /slides -->
+
+<!-- Navigation Buttons -->
+<div class="nav-buttons">
+  <button class="nav-btn" onclick="prevSlide()">←</button>
+  <button class="nav-btn" onclick="nextSlide()">→</button>
+</div>
+
+<!-- Bottom Progress -->
+<div class="bottom-progress" id="bottom-progress"></div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <button class="lightbox-nav lightbox-nav--prev" onclick="navigateLightbox(-1)">←</button>
+  <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" onerror="this.style.display='none'">
+  <button class="lightbox-nav lightbox-nav--next" onclick="navigateLightbox(1)">→</button>
+  <div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const totalSlides = slides.length;
+  let currentSlide = 1;
+
+  // BroadcastChannel for sync with script view
+  const channel = new BroadcastChannel('presentation-sync');
+
+  channel.onmessage = (event) => {
+    if (event.data.type === 'slideChange') {
+      showSlide(event.data.slide, false);
+    }
+  };
+
+  const sections = {
+    opening:  { start: 1,  end: 5 },
+    step1:    { start: 6,  end: 9 },
+    step2:    { start: 10, end: 15 },
+    step3:    { start: 16, end: 22 },
+    step4:    { start: 23, end: 29 },
+    demo:     { start: 30, end: 34 },
+    closing:  { start: 35, end: 38 }
+  };
+
+  function getCurrentSection(n) {
+    for (const [key, val] of Object.entries(sections)) {
+      if (n >= val.start && n <= val.end) return key;
+    }
+    return 'opening';
+  }
+
+  function updateNav(n) {
+    const sec = getCurrentSection(n);
+    document.querySelectorAll('.nav-section').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.section === sec);
+    });
+    const pct = (n / totalSlides) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('bottom-progress').style.width = pct + '%';
+    document.getElementById('nav-counter').textContent = n + ' / ' + totalSlides;
+  }
+
+  function goToSection(name) {
+    const s = sections[name];
+    if (s) showSlide(s.start);
+  }
+
+  function showSlide(n, broadcast = true) {
+    if (n < 1) n = 1;
+    if (n > totalSlides) n = totalSlides;
+    slides.forEach(s => s.classList.remove('active'));
+    document.querySelector('[data-slide="' + n + '"]').classList.add('active');
+    currentSlide = n;
+    updateNav(n);
+    history.replaceState(null, null, '#' + n);
+    if (broadcast) {
+      channel.postMessage({ type: 'slideChange', slide: n });
+    }
+  }
+
+  function nextSlide() { showSlide(currentSlide + 1); }
+  function prevSlide() { showSlide(currentSlide - 1); }
+
+  function getSlideFromHash() {
+    const h = window.location.hash;
+    if (h) {
+      const n = parseInt(h.replace('#', ''));
+      if (!isNaN(n) && n >= 1 && n <= totalSlides) return n;
+    }
+    return 1;
+  }
+
+  window.addEventListener('hashchange', () => {
+    const n = getSlideFromHash();
+    if (n !== currentSlide) showSlide(n, true);
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault(); nextSlide();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault(); prevSlide();
+    } else if (e.key === 'Home') {
+      e.preventDefault(); showSlide(1);
+    } else if (e.key === 'End') {
+      e.preventDefault(); showSlide(totalSlides);
+    } else if (e.key === 'Escape') {
+      closeLightbox();
+    }
+  });
+
+  showSlide(getSlideFromHash());
+
+  // Image Carousel & Lightbox
+  const carouselImages = [
+    { src: '01-vacode-첫화면.png', caption: 'VS Code 첫화면' },
+    { src: '01-vacode-작업화면.png', caption: 'VS Code 작업화면' },
+    { src: '02-antigravity-첫화면.png', caption: 'Antigravity 첫화면' },
+    { src: '02-antigravity-작업화면.png', caption: 'Antigravity 작업화면' }
+  ];
+  let currentLightboxIndex = 0;
+
+  function scrollCarousel(direction) {
+    const carousel = document.getElementById('imageCarousel');
+    const scrollAmount = carousel.offsetWidth * 0.5;
+    carousel.scrollBy({ left: direction * scrollAmount, behavior: 'smooth' });
+  }
+
+  function openLightbox(index) {
+    currentLightboxIndex = index;
+    updateLightbox();
+    document.getElementById('lightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function updateLightbox() {
+    const img = carouselImages[currentLightboxIndex];
+    document.getElementById('lightbox-img').src = img.src;
+    document.getElementById('lightbox-caption').textContent = img.caption;
+  }
+
+  function navigateLightbox(direction) {
+    event.stopPropagation();
+    currentLightboxIndex += direction;
+    if (currentLightboxIndex < 0) currentLightboxIndex = carouselImages.length - 1;
+    if (currentLightboxIndex >= carouselImages.length) currentLightboxIndex = 0;
+    updateLightbox();
+  }
+
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('lightbox').addEventListener('click', function(e) {
+    if (e.target === this) closeLightbox();
+  });
+</script>
+</body>
+</html>
