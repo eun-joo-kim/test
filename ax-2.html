@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>에이전트 설계도, PRD 마스터하기 - AX Agent Workshop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1D1D1F;
+            --primary-light: #3A3A3C;
+            --primary-dark: #000000;
+            --secondary: #6E6E73;
+            --success: #3A3A3C;
+            --warning: #6E6E73;
+            --danger: #1D1D1F;
+            --dark: #000000;
+            --gray: #6E6E73;
+            --light: #F5F5F7;
+            --white: #FFFFFF;
+            --gradient: linear-gradient(135deg, #000000 0%, #1D1D1F 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+            background: var(--dark);
+            color: var(--dark);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .presentation { width: 100vw; height: 100vh; position: relative; overflow: hidden; }
+
+        .slide {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            padding: 80px 80px 60px; background: #FFFFFF; opacity: 0; transition: opacity 0.5s ease;
+        }
+
+        .slide.active { display: flex; opacity: 1; }
+
+        .slide-gradient {
+            background: #000000;
+            color: #FFFFFF;
+        }
+
+        .slide-dark {
+            background: #1D1D1F;
+            color: #FFFFFF;
+        }
+
+        h1 { font-size: 3.2rem; font-weight: 900; margin-bottom: 1.5rem; line-height: 1.3; }
+        h2 { font-size: 2.4rem; font-weight: 700; margin-bottom: 1.5rem; color: #1D1D1F; }
+        .slide-gradient h2, .slide-dark h2 { color: #FFFFFF; }
+        h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 0.8rem; color: var(--dark); }
+        p { font-size: 1.3rem; line-height: 1.7; color: var(--gray); max-width: 900px; }
+        .slide-gradient p, .slide-dark p { color: rgba(255,255,255,0.9); }
+        .subtitle { font-size: 1.6rem; font-weight: 400; opacity: 0.9; }
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: rgba(255,255,255,0.18);
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #FFFFFF;
+            letter-spacing: 0.02em;
+        }
+        .slide:not(.slide-gradient):not(.slide-dark) .badge {
+            background: #1D1D1F;
+            color: #FFFFFF;
+        }
+
+        /* Highlight Box */
+        .highlight-box {
+            background: #1D1D1F;
+            color: #FFFFFF;
+            border-radius: 16px;
+            padding: 1.5rem 2.5rem;
+            font-size: 1.4rem;
+            font-weight: 500;
+            text-align: center;
+            max-width: 850px;
+            margin: 1.5rem 0;
+        }
+
+        /* Grid Layouts */
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem; width: 100%; max-width: 1100px; margin-top: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; width: 100%; max-width: 1100px; margin-top: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; width: 100%; max-width: 1100px; margin-top: 1.5rem; }
+
+        /* Card */
+        .card {
+            background: #F5F5F7;
+            border-radius: 16px;
+            padding: 1.8rem;
+            text-align: left;
+            border: none;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+        }
+        .card-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+        .card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #1D1D1F; }
+        .card p { font-size: 1rem; color: #6E6E73; }
+        .card-primary { background: #1D1D1F; color: #FFFFFF; }
+        .card-primary h3, .card-primary p { color: #FFFFFF; }
+
+        /* Comparison */
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; width: 100%; max-width: 1000px; margin-top: 1.5rem; }
+        .comparison-item { background: #F5F5F7; border-radius: 16px; padding: 2rem; }
+        .comparison-item.bad { border: 3px solid #C7C7CC; }
+        .comparison-item.good { background: #F5F5F7; border: 3px solid #1D1D1F; }
+        .comparison-item.good h3 { color: #1D1D1F; }
+        .comparison-item.bad h3 { color: #6E6E73; }
+
+        /* Code Block */
+        .code-block {
+            background: #1D1D1F;
+            color: #F5F5F7;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Menlo', 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            text-align: left;
+            width: 100%;
+            max-width: 900px;
+            line-height: 1.7;
+            margin: 1rem 0;
+        }
+        .code-block .highlight { color: #FFFFFF; font-weight: 600; }
+
+        /* Step Box */
+        .step-box {
+            background: #F5F5F7;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #D2D2D7;
+        }
+        .step-box h3 { color: #1D1D1F; }
+        .step-box.active {
+            background: #1D1D1F;
+            color: #FFFFFF;
+            border-left-color: #6E6E73;
+        }
+        .step-box.active h3, .step-box.active p { color: white; }
+
+        /* Table */
+        .table-container { width: 100%; max-width: 1000px; margin-top: 1.5rem; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th { background: #1D1D1F; color: #FFFFFF; padding: 1rem; text-align: left; font-weight: 600; }
+        td { padding: 0.8rem 1rem; border-bottom: 1px solid #F5F5F7; color: #3A3A3C; }
+        tr:nth-child(even) { background: #F5F5F7; }
+
+        /* Controls */
+        .controls {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 20px; z-index: 100;
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(20px);
+            padding: 12px 25px; border-radius: 50px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+        }
+        .controls button {
+            width: 45px; height: 45px; border: none; border-radius: 50%;
+            background: #1D1D1F; color: #FFFFFF; font-size: 1.1rem;
+            cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .controls button:hover { background: #000000; transform: scale(1.1); }
+        .controls button:disabled { background: #C7C7CC; cursor: not-allowed; transform: none; }
+        .progress-container { width: 180px; height: 6px; background: #F5F5F7; border-radius: 3px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #1D1D1F; transition: width 0.3s ease; }
+        .slide-counter { font-size: 0.9rem; color: var(--gray); font-weight: 500; min-width: 55px; text-align: center; }
+
+        @media (max-width: 1024px) { .slide { padding: 50px; } h1 { font-size: 2.5rem; } h2 { font-size: 2rem; } }
+        @media (max-width: 768px) { .slide { padding: 40px 30px; } h1 { font-size: 2rem; } h2 { font-size: 1.6rem; } .grid-2, .grid-3, .grid-4, .comparison { grid-template-columns: 1fr; } }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .slide.active .animate { animation: fadeInUp 0.6s ease forwards; }
+        .animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+        /* GNB Navigation Bar */
+        .gnb {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: rgba(0,0,0,0.97);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            z-index: 1000;
+            box-shadow: none;
+            border-bottom: none;
+        }
+        .gnb-item {
+            position: relative;
+            padding: 0 1.5rem;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        .gnb-item:hover {
+            color: rgba(255,255,255,0.85);
+            background: rgba(255,255,255,0.05);
+        }
+        .gnb-item.active {
+            color: #FFFFFF;
+            border-bottom-color: #FFFFFF;
+            background: rgba(255,255,255,0.08);
+        }
+        .gnb-item .gnb-icon {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+        }
+        .gnb-item .gnb-range {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            margin-left: 0.4rem;
+        }
+        .gnb-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #FFFFFF;
+            transition: width 0.3s ease;
+        }
+
+        /* Adjust slide padding for GNB */
+        .slide {
+            padding-top: 80px;
+        }
+
+        @media (max-width: 900px) {
+            .gnb-item { padding: 0 0.8rem; font-size: 0.8rem; }
+            .gnb-item .gnb-range { display: none; }
+        }
+        @media (max-width: 600px) {
+            .gnb-item { padding: 0 0.5rem; font-size: 0.75rem; }
+            .gnb-item .gnb-icon { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <!-- GNB Navigation Bar -->
+    <nav class="gnb" id="gnb">
+        <div class="gnb-item active" data-section="intro" data-start="1" data-end="9" onclick="goToSection(1)">
+            <span class="gnb-icon">🚀</span>인트로<span class="gnb-range">1-9</span>
+        </div>
+        <div class="gnb-item" data-section="basic" data-start="10" data-end="18" onclick="goToSection(10)">
+            <span class="gnb-icon">📘</span>PRD 기초<span class="gnb-range">10-18</span>
+        </div>
+        <div class="gnb-item" data-section="writing" data-start="19" data-end="24" onclick="goToSection(19)">
+            <span class="gnb-icon">✍️</span>PRD 작성<span class="gnb-range">19-24</span>
+        </div>
+        <div class="gnb-item" data-section="advanced" data-start="25" data-end="35" onclick="goToSection(25)">
+            <span class="gnb-icon">🎓</span>Advanced<span class="gnb-range">25-35</span>
+        </div>
+        <div class="gnb-item" data-section="tips" data-start="36" data-end="39" onclick="goToSection(36)">
+            <span class="gnb-icon">🍯</span>꿀팁<span class="gnb-range">36-39</span>
+        </div>
+        <div class="gnb-progress" id="gnb-progress"></div>
+    </nav>
+
+    <div class="presentation">
+        <!-- ==================== Slide 1: 표지 ==================== -->
+        <div class="slide slide-gradient active" id="slide-1">
+            <div class="badge animate animate-delay-1">AX Agent Workshop</div>
+            <h1 class="animate animate-delay-2">에이전트 설계도,<br>PRD 마스터하기</h1>
+            <p class="subtitle animate animate-delay-3">바이브코딩으로 AI와 함께 나만의 에이전트 만들기</p>
+            <p style="margin-top: 3rem; font-size: 1rem; opacity: 0.7;" class="animate animate-delay-3">
+                모두의연구소 KHP팀 | Basic + Advanced 과정
+            </p>
+        </div>
+
+        <!-- ==================== Slide 2: 바이브코딩이란? ==================== -->
+        <div class="slide" id="slide-2">
+            <h2>바이브코딩(Vibe Coding)이란?</h2>
+            <div class="highlight-box animate animate-delay-1">
+                자연어로 AI에게 코드 작성을 요청하는 개발 방식
+            </div>
+            <div class="grid-3 animate animate-delay-2" style="margin-top: 1.5rem;">
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">💬</div>
+                    <h3>대화</h3>
+                    <p>원하는 것을 말로 설명</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">🤖</div>
+                    <h3>AI 이해</h3>
+                    <p>AI가 의도를 파악</p>
+                </div>
+                <div class="card card-primary" style="text-align: center;">
+                    <div class="card-icon">💻</div>
+                    <h3>코드 생성</h3>
+                    <p>자동으로 코드 작성</p>
+                </div>
+            </div>
+            <p style="margin-top: 1.5rem; font-size: 1rem; color: var(--gray);">
+                2024년 Andrej Karpathy가 명명 | "코드를 쓰지 않고 vibe(느낌)를 전달"
+            </p>
+        </div>
+
+        <!-- ==================== Slide 3: 왜 에이전트인가? ==================== -->
+        <div class="slide" id="slide-3">
+            <h2>왜 에이전트를 만들어야 할까?</h2>
+            <div class="grid-3 animate animate-delay-1">
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">😩</div>
+                    <h3>반복되는 업무</h3>
+                    <p>매번 같은 형식의<br>글, 이메일, 보고서...</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <div class="card-icon">⏰</div>
+                    <h3>시간 낭비</h3>
+                    <p>단순 작업에<br>하루가 다 간다</p>
+                </div>
+                <div class="card card-primary" style="text-align: center;">
+                    <div class="card-icon">🤖</div>
+                    <h3>해결책: 에이전트</h3>
+                    <p>나 대신 일하는<br>AI 비서 만들기</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 2rem;">
+                에이전트 = <span style="color: #F5F5F7; font-weight: 700;">내가 시킨 일을 알아서 해주는</span> AI 프로그램
+            </div>
+        </div>
+
+        <!-- ==================== Slide 4: 에이전트 예시 (1) ==================== -->
+        <div class="slide" id="slide-4">
+            <h2>이런 걸 만들 수 있어요 (1/2)</h2>
+            <p style="margin-bottom: 1rem;">일상 업무 자동화</p>
+            <div class="grid-3 animate animate-delay-1">
+                <div class="card"><div class="card-icon">📝</div><h3>콘텐츠 생성</h3><p>블로그 글, SNS 포스트, 뉴스레터 자동 작성</p></div>
+                <div class="card"><div class="card-icon">📧</div><h3>이메일 작성</h3><p>상황별 이메일 초안 자동 생성</p></div>
+                <div class="card"><div class="card-icon">🔍</div><h3>리서치 보조</h3><p>정보 수집, 요약, 보고서 작성</p></div>
+                <div class="card"><div class="card-icon">💬</div><h3>고객 응대</h3><p>FAQ 답변, 문의 분류, 초기 응대</p></div>
+                <div class="card"><div class="card-icon">📊</div><h3>데이터 정리</h3><p>엑셀 데이터 분석, 리포트 생성</p></div>
+                <div class="card"><div class="card-icon">📅</div><h3>일정 관리</h3><p>미팅 요약, 할일 정리, 리마인더</p></div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 5: 에이전트 예시 (2) - 마케팅 특화 ==================== -->
+        <div class="slide" id="slide-5">
+            <h2>이런 걸 만들 수 있어요 (2/2)</h2>
+            <p style="margin-bottom: 1rem;">마케팅 업무 자동화</p>
+            <div class="grid-3 animate animate-delay-1">
+                <div class="card"><div class="card-icon">📢</div><h3>광고 카피 생성</h3><p>제품별 맞춤 광고 문구 자동 생성</p></div>
+                <div class="card"><div class="card-icon">🎯</div><h3>타겟 분석</h3><p>고객 데이터 분석, 페르소나 생성</p></div>
+                <div class="card"><div class="card-icon">📱</div><h3>SNS 콘텐츠</h3><p>인스타, 블로그, 유튜브 스크립트</p></div>
+                <div class="card"><div class="card-icon">📈</div><h3>캠페인 분석</h3><p>마케팅 성과 리포트 자동 생성</p></div>
+                <div class="card"><div class="card-icon">🔄</div><h3>A/B 테스트</h3><p>여러 버전 카피 생성 및 비교</p></div>
+                <div class="card card-primary"><div class="card-icon">✨</div><h3>당신의 아이디어</h3><p>반복하는 모든 일을 자동화!</p></div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 6: 아이디어 정하기 ==================== -->
+        <div class="slide" id="slide-6">
+            <h2>아이디어 정하기</h2>
+            <p style="margin-bottom: 1.5rem;">두 가지 방법 중 선택하세요</p>
+            <div class="comparison animate animate-delay-1">
+                <div class="comparison-item good">
+                    <h3 style="color: #1D1D1F;">💡 이미 아이디어가 있다면</h3>
+                    <p style="font-size: 1.1rem; margin-top: 1rem;">
+                        바로 AI에게 PRD 요청!<br><br>
+                        <span style="color: var(--gray);">"[내 아이디어]로 에이전트 만들 건데,<br>PRD 작성해줘"</span>
+                    </p>
+                </div>
+                <div class="comparison-item" style="border: 3px solid #1D1D1F;">
+                    <h3 style="color: #1D1D1F;">🤔 뭘 만들지 모르겠다면</h3>
+                    <p style="font-size: 1.1rem; margin-top: 1rem;">
+                        AI와 대화하며 발굴!<br><br>
+                        <span style="color: var(--gray);">"나는 ~인데 ~일을 하고 있어.<br>에이전트를 만들고 싶은데<br>뭘 만들면 좋을지 질문해줘"</span>
+                    </p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                AI가 추천해준 아이디어 중 마음에 드는 걸 골라서 → PRD 요청!
+            </div>
+        </div>
+
+        <!-- ==================== Slide 7: 모르겠으면 AI한테 물어봐 ==================== -->
+        <div class="slide" id="slide-7">
+            <h2>막히면? AI한테 물어보세요</h2>
+            <p style="margin-bottom: 1.5rem;">무슨 말을 해야 할지 모르겠을 때</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px;">
+                <div class="card" style="background: #1D1D1F; color: white;">
+                    <h3 style="color: #F5F5F7; margin-bottom: 1rem;">💬 이렇게 물어보세요</h3>
+                    <div style="font-size: 1rem; line-height: 1.9;">
+                        <p style="color: white; margin-bottom: 0.8rem;">"이 에이전트 만들려면 뭘 정해야 해?"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"PRD에 뭘 넣어야 하는지 질문해줘"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"내가 대답하면 PRD 작성해줘"</p>
+                    </div>
+                </div>
+                <div>
+                    <div class="step-box"><h3>1️⃣ AI가 질문</h3><p style="font-size: 1rem; color: var(--gray);">"타겟 사용자가 누구인가요?"</p></div>
+                    <div class="step-box"><h3>2️⃣ 내가 대답</h3><p style="font-size: 1rem; color: var(--gray);">"20대 직장인이요"</p></div>
+                    <div class="step-box active"><h3>3️⃣ AI가 PRD 완성</h3><p style="font-size: 1rem;">대화만 했는데 PRD 완성!</p></div>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                모르겠으면 <span style="color: #F5F5F7; font-weight: 700;">"뭘 정해야 하는지 질문해줘"</span>라고 하면 됩니다
+            </div>
+        </div>
+
+        <!-- ==================== Slide 8: 바이브 코딩 ==================== -->
+        <div class="slide" id="slide-8">
+            <h2>코딩 몰라도 됩니다</h2>
+            <p style="margin-bottom: 1.5rem;">바이브 코딩 = AI에게 말로 설명하면 코드가 나온다</p>
+            <div class="comparison animate animate-delay-1">
+                <div class="comparison-item">
+                    <h3 style="color: var(--gray);">❌ 예전 방식</h3>
+                    <p style="font-size: 1.1rem; margin-top: 1rem;">프로그래밍 언어 배우기<br>→ 코드 직접 작성<br>→ 에러 수정<br>→ 몇 주~몇 달</p>
+                </div>
+                <div class="comparison-item good">
+                    <h3 style="color: #1D1D1F;">✅ 바이브 코딩</h3>
+                    <p style="font-size: 1.1rem; margin-top: 1rem;"><strong>AI에게 설명</strong><br>→ AI가 코드 작성<br>→ 피드백으로 수정<br>→ <strong>몇 시간~며칠</strong></p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 2rem;">
+                핵심은 <span style="color: #F5F5F7; font-weight: 700;">AI에게 뭘 만들지 잘 설명하는 것</span> = PRD
+            </div>
+        </div>
+
+        <!-- ==================== Slide 9: 에이전트 제작 워크플로우 ==================== -->
+        <div class="slide slide-dark" id="slide-9">
+            <h2 style="color: white;">에이전트 만드는 순서</h2>
+            <p style="margin-bottom: 1.5rem; color: rgba(255,255,255,0.7);">전체 워크플로우를 먼저 이해하세요</p>
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; justify-content: center;" class="animate animate-delay-1">
+                <div style="background: #3A3A3C; color: white; padding: 1rem 1.2rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.3rem; margin-bottom: 0.3rem;">💡</div>
+                    <p style="font-size: 0.85rem;"><strong>아이디어</strong></p>
+                </div>
+                <span style="color: white; font-size: 1.3rem;">→</span>
+                <div style="background: #6E6E73; color: white; padding: 1rem 1.2rem; border-radius: 12px; text-align: center; border: 3px solid white;">
+                    <div style="font-size: 1.3rem; margin-bottom: 0.3rem;">📄</div>
+                    <p style="font-size: 0.85rem;"><strong>PRD 작성</strong></p>
+                </div>
+                <span style="color: white; font-size: 1.3rem;">→</span>
+                <div style="background: #3A3A3C; color: white; padding: 1rem 1.2rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.3rem; margin-bottom: 0.3rem;">🤖</div>
+                    <p style="font-size: 0.85rem;"><strong>AI에게 요청</strong></p>
+                </div>
+                <span style="color: white; font-size: 1.3rem;">→</span>
+                <div style="background: #3A3A3C; color: white; padding: 1rem 1.2rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.3rem; margin-bottom: 0.3rem;">💻</div>
+                    <p style="font-size: 0.85rem;"><strong>코드 생성</strong></p>
+                </div>
+                <span style="color: white; font-size: 1.3rem;">→</span>
+                <div style="background: #6E6E73; color: white; padding: 1rem 1.2rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.3rem; margin-bottom: 0.3rem;">🔄</div>
+                    <p style="font-size: 0.85rem;"><strong>테스트/수정</strong></p>
+                </div>
+                <span style="color: white; font-size: 1.3rem;">→</span>
+                <div style="background: #F5F5F7; color: #000000; padding: 1rem 1.2rem; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 1.3rem; margin-bottom: 0.3rem;">🎉</div>
+                    <p style="font-size: 0.85rem; color: #000000;"><strong>완성!</strong></p>
+                </div>
+            </div>
+            <div class="grid-2 animate animate-delay-2" style="margin-top: 2rem; max-width: 800px; gap: 1.5rem;">
+                <div style="background: rgba(255,255,255,0.15); padding: 1.2rem; border-radius: 12px; border: 2px solid #6E6E73;">
+                    <h3 style="color: #F5F5F7; margin-bottom: 0.5rem;">📄 오늘 배울 것</h3>
+                    <p style="font-size: 1rem; color: white;">PRD 작성법 (가장 중요!)</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1.2rem; border-radius: 12px;">
+                    <h3 style="color: rgba(255,255,255,0.7); margin-bottom: 0.5rem;">💻 다음 단계</h3>
+                    <p style="font-size: 1rem; color: rgba(255,255,255,0.7);">AI 도구로 코드 생성 (Cursor, Claude 등)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 10: PRD란? ==================== -->
+        <div class="slide slide-dark" id="slide-10">
+            <div class="badge">핵심 개념</div>
+            <h1>PRD란?</h1>
+            <p class="subtitle" style="margin-bottom: 2rem;">Product Requirements Document = 제품 요구사항 문서</p>
+            <div style="background: rgba(255,255,255,0.1); padding: 2rem; border-radius: 16px; max-width: 800px;">
+                <p style="font-size: 1.3rem; text-align: center; color: white;">
+                    쉽게 말해, <strong style="color: #F5F5F7;">"AI에게 주는 설계도"</strong><br><br>
+                    뭘 만들지, 어떻게 작동해야 하는지<br>
+                    AI가 이해할 수 있게 정리한 문서
+                </p>
+            </div>
+            <p style="margin-top: 1.5rem; font-size: 1rem; color: rgba(255,255,255,0.7);">
+                📐 비유: 설계도가 명확할수록 결과물이 정확해진다
+            </p>
+        </div>
+
+        <!-- ==================== Slide 11: 전통 PRD vs 바이브코딩 PRD ==================== -->
+        <div class="slide" id="slide-11">
+            <h2>전통적 PRD vs 바이브코딩 PRD</h2>
+            <div class="table-container animate animate-delay-1">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>전통적 PRD</th>
+                            <th>바이브코딩 PRD</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>모호해도 개발자가 해석</td>
+                            <td><strong style="color: #1D1D1F;">구체적이어야</strong> AI가 이해</td>
+                        </tr>
+                        <tr>
+                            <td>"직관적인 UI" OK ✓</td>
+                            <td>"버튼 색상 #3B82F6, 라운드 8px" 필요</td>
+                        </tr>
+                        <tr>
+                            <td>암묵적 요구사항 OK</td>
+                            <td><strong style="color: #1D1D1F;">모든 것을 명시</strong>해야 함</td>
+                        </tr>
+                        <tr>
+                            <td>개발자가 빈틈 채움</td>
+                            <td>AI는 빈틈을 <span style="color: #6E6E73;">임의로</span> 채움</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                바이브코딩에서 PRD = <span style="color: #F5F5F7; font-weight: 700;">"소스 코드"</span> 그 자체!
+            </div>
+        </div>
+
+        <!-- ==================== Slide 12: PRD 7가지 필수 섹션 ==================== -->
+        <div class="slide" id="slide-12">
+            <h2>AI-Friendly PRD의 7가지 필수 섹션</h2>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <div class="step-box"><h3>1. 프로젝트 개요</h3><p style="font-size: 0.95rem; color: var(--gray);">무엇을 왜 만드는가</p></div>
+                    <div class="step-box"><h3>2. 목표와 성공 지표</h3><p style="font-size: 0.95rem; color: var(--gray);">측정 가능한 목표</p></div>
+                    <div class="step-box"><h3>3. 사용자 스토리</h3><p style="font-size: 0.95rem; color: var(--gray);">누가, 무엇을, 왜</p></div>
+                    <div class="step-box active"><h3>4. 기능 요구사항</h3><p style="font-size: 0.95rem;">구체적인 기능 목록</p></div>
+                </div>
+                <div>
+                    <div class="step-box"><h3>5. 기술 스택</h3><p style="font-size: 0.95rem; color: var(--gray);">사용할 기술 <span style="color: #6E6E73;">(모르면 AI에게!)</span></p></div>
+                    <div class="step-box"><h3>6. 제약사항 (NOT)</h3><p style="font-size: 0.95rem; color: var(--gray);">하지 말아야 할 것</p></div>
+                    <div class="step-box"><h3>7. 참고자료</h3><p style="font-size: 0.95rem; color: var(--gray);">예시, 디자인 레퍼런스</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 13: PRD 핵심 요소 (단순화) ==================== -->
+        <div class="slide" id="slide-13">
+            <h2>AI용 PRD를 만드는 프롬프트</h2>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <p style="margin-bottom: 1rem; color: #1D1D1F; font-weight: 700;">⭐ 핵심 3가지</p>
+                    <div class="step-box active"><h3>1. 한 문장 설명</h3><p style="font-size: 1rem;">이 에이전트가 뭘 하는지 한 줄로</p></div>
+                    <div class="step-box active"><h3>2. 입력 → 출력</h3><p style="font-size: 1rem;">뭘 넣으면 뭐가 나오는지</p></div>
+                    <div class="step-box active"><h3>3. 예시</h3><p style="font-size: 1rem;">좋은 예시, 나쁜 예시 (이게 핵심!)</p></div>
+                </div>
+                <div>
+                    <p style="margin-bottom: 1rem; color: var(--gray); font-weight: 600;">➕ 추가하면 좋은 것</p>
+                    <div class="step-box"><h3 style="color: var(--gray);">대상 사용자</h3><p style="font-size: 1rem; color: var(--gray);">누가 쓸 건지, 어떤 상황에서</p></div>
+                    <div class="step-box"><h3 style="color: var(--gray);">구체적 규칙</h3><p style="font-size: 1rem; color: var(--gray);">글자수, 톤, 형식 등 제약사항</p></div>
+                    <div class="step-box"><h3 style="color: var(--gray);">하지 말 것 (NOT)</h3><p style="font-size: 1rem; color: var(--gray);">포함하지 말아야 할 것 명시</p></div>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                💡 팁: <span style="color: #F5F5F7; font-weight: 700;">출력물의 형태(예시)</span>를 구체적으로 지정하면 더 좋은 결과!
+            </div>
+        </div>
+
+        <!-- ==================== Slide 14: PRD 실전 예시 - 마케팅 에이전트 ==================== -->
+        <div class="slide" id="slide-14">
+            <h2>PRD 작성 실전 예시</h2>
+            <p style="margin-bottom: 1rem;">SNS 마케팅 카피 생성 에이전트</p>
+            <div class="code-block animate animate-delay-1" style="max-width: 850px; font-size: 0.9rem;">
+                <span class="highlight">## 프로젝트 개요</span><br>
+                제품 정보를 입력하면 SNS 채널별 맞춤 마케팅 카피를 자동 생성하는 에이전트<br><br>
+                <span class="highlight">## 핵심 기능</span><br>
+                1. 제품명, 특징, 타겟 입력 받기<br>
+                2. 인스타그램/페이스북/블로그용 카피 각각 생성<br>
+                3. 톤앤매너 선택 (친근한/전문적/유머러스)<br>
+                4. 해시태그 자동 추천<br><br>
+                <span class="highlight">## 입출력 명세</span><br>
+                - Input: {제품명, 핵심특징 3개, 타겟층, 톤앤매너}<br>
+                - Output: {인스타 카피 150자, 페북 카피 300자, 블로그 제목+인트로}<br><br>
+                <span class="highlight">## 성공 지표</span><br>
+                - 3개 채널 카피를 10초 이내 생성<br>
+                - 각 카피에 해시태그 5개 이상 포함
+            </div>
+        </div>
+
+        <!-- ==================== Slide 15: AI에게 PRD 요청하기 ==================== -->
+        <div class="slide" id="slide-15">
+            <h2>실전: AI에게 PRD 요청하기</h2>
+            <p style="margin-bottom: 1rem;">이 프롬프트를 복사해서 사용하세요</p>
+            <div class="code-block animate animate-delay-1" style="max-width: 900px; font-size: 0.95rem;">
+                나는 <span class="highlight">[직업/역할]</span>이고, <span class="highlight">[회사/상황]</span>에서 일해.<br><br>
+                <span class="highlight">[반복하는 업무]</span>를 자동화하는 에이전트를 만들고 싶어.<br><br>
+                아래 형식으로 PRD를 작성해줘:<br><br>
+                1. 한 문장 설명<br>
+                2. 입력 → 출력<br>
+                3. 좋은 예시 / 나쁜 예시
+            </div>
+            <p style="font-size: 1rem; color: #3A3A3C; margin-top: 1rem;" class="animate animate-delay-2">
+                💡 AI가 만든 PRD를 검토하고, 부족한 부분은 피드백해서 수정하세요
+            </p>
+        </div>
+
+        <!-- ==================== Slide 16: 꿀팁 - 기술스택 모를 때 ==================== -->
+        <div class="slide" id="slide-16">
+            <h2>꿀팁 #1: 기술스택 모를 때</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">AI에게 물어보세요!</p>
+            <div class="code-block animate animate-delay-1" style="max-width: 850px; font-size: 0.9rem;">
+                나는 <span class="highlight">[SNS 마케팅 카피 생성 에이전트]</span>를 만들려고 해.<br>
+                비개발자인데, 이걸 바이브코딩으로 만들고 싶어.<br><br>
+                아래 조건에 맞는 기술스택을 <span class="highlight">리스팅</span>해줘:<br>
+                - 초보자도 이해하기 쉬운 것<br>
+                - 무료 배포 가능한 것<br>
+                - 각 선택지의 <span class="highlight">장단점과 특징</span>도 알려줘
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                💡 AI는 여러 선택지를 리스팅해주고, 장단점과 특징을 비교해줍니다!
+            </div>
+        </div>
+
+        <!-- ==================== Slide 17: 알면 좋은 개념들 (1) ==================== -->
+        <div class="slide" id="slide-17">
+            <h2>알면 PRD 쓰기 쉬워지는 개념들 (1/2)</h2>
+            <p style="margin-bottom: 1rem;">몰라도 되지만, 알면 AI에게 더 정확히 요청할 수 있어요</p>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card"><div class="card-icon">🔌</div><h3>API</h3><p>프로그램끼리 대화하는 방법<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "OpenAI API로 GPT 연결해줘"</span></p></div>
+                <div class="card"><div class="card-icon">🐍</div><h3>Python</h3><p>AI 개발에 가장 많이 쓰는 언어<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "Python으로 만들어줘"</span></p></div>
+                <div class="card"><div class="card-icon">📚</div><h3>RAG</h3><p>내 문서를 AI가 참고하게 하는 기술<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "내 PDF 기반으로 답변"</span></p></div>
+                <div class="card"><div class="card-icon">💾</div><h3>데이터베이스 (DB)</h3><p>정보를 저장하는 창고<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "고객 정보를 DB에 저장"</span></p></div>
+                <div class="card"><div class="card-icon">🔄</div><h3>워크플로우</h3><p>작업이 흘러가는 순서<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "입력 → 처리 → 출력 순서"</span></p></div>
+                <div class="card"><div class="card-icon">🤖</div><h3>LLM</h3><p>GPT, Claude 같은 AI 모델<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "GPT-4 모델 사용해줘"</span></p></div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 18: 알면 좋은 개념들 (2) ==================== -->
+        <div class="slide" id="slide-18">
+            <h2>알면 PRD 쓰기 쉬워지는 개념들 (2/2)</h2>
+            <p style="margin-bottom: 1rem;">이런 용어를 알면 더 정확하게 요청할 수 있어요</p>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card"><div class="card-icon">📤</div><h3>입력/출력 (I/O)</h3><p>에이전트에 뭘 넣고 뭘 받을지<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "키워드 입력 → 글 출력"</span></p></div>
+                <div class="card"><div class="card-icon">🔁</div><h3>반복 (Loop)</h3><p>같은 작업을 여러 번 수행<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "10개 제품에 대해 반복"</span></p></div>
+                <div class="card"><div class="card-icon">⚡</div><h3>트리거</h3><p>에이전트가 시작되는 조건<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "이메일 오면 자동 실행"</span></p></div>
+                <div class="card"><div class="card-icon">📝</div><h3>프롬프트</h3><p>AI에게 주는 지시문<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "시스템 프롬프트 설정해줘"</span></p></div>
+                <div class="card"><div class="card-icon">🔗</div><h3>연동/통합</h3><p>다른 서비스와 연결<br><span style="color: #1D1D1F; font-size: 0.9rem;">예: "슬랙/노션과 연동해줘"</span></p></div>
+                <div class="card card-primary"><div class="card-icon">💡</div><h3>핵심</h3><p>개념 이름만 알아도<br>AI가 알아서 구현해줌!<br><span style="font-size: 0.9rem;">"RAG 적용해줘" 한마디면 OK</span></p></div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 19: 모호한 vs 구체적 프롬프트 ==================== -->
+        <div class="slide" id="slide-19">
+            <h2>모호하게 vs 구체적으로</h2>
+            <p style="margin-bottom: 1.5rem;">같은 요청도 어떻게 쓰느냐에 따라 결과가 달라집니다</p>
+            <div class="comparison animate animate-delay-1">
+                <div class="comparison-item bad">
+                    <h3 style="color: #6E6E73;">❌ 모호한 프롬프트</h3>
+                    <div class="code-block" style="background: #F5F5F7; color: #1D1D1F; font-size: 1rem; margin-top: 1rem;">
+                        "마케팅 이메일 써줘"
+                    </div>
+                    <p style="font-size: 1rem; margin-top: 1rem;">
+                        → AI: "어떤 제품? 누구한테? 몇 글자?"<br>
+                        → <strong>질문 10번</strong> 주고받기<br>
+                        → 결국 원하는 게 아님
+                    </p>
+                </div>
+                <div class="comparison-item good">
+                    <h3 style="color: #1D1D1F;">✅ 구체적인 프롬프트</h3>
+                    <div class="code-block" style="background: #E8E8ED; color: #1D1D1F; font-size: 0.95rem; margin-top: 1rem;">
+                        "20대 여성 타겟, 화장품 신제품 홍보,<br>친근한 톤, 300자 이내, CTA 버튼 포함"
+                    </div>
+                    <p style="font-size: 1rem; margin-top: 1rem;">
+                        → AI가 <strong>바로 이해</strong><br>
+                        → 수정 1-2번으로 완성<br>
+                        → 원하는 결과물!
+                    </p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                <span style="color: #F5F5F7; font-weight: 700;">구체적일수록</span> AI가 질문 없이 바로 작업한다!
+            </div>
+        </div>
+
+        <!-- ==================== Slide 20: 흔한 실수 ==================== -->
+        <div class="slide" id="slide-20">
+            <h2>피해야 할 실수 3가지</h2>
+            <div class="grid-3 animate animate-delay-1" style="max-width: 1100px;">
+                <div class="card" style="border-top: 4px solid #6E6E73;">
+                    <h3 style="color: #1D1D1F;">1. 너무 모호함</h3>
+                    <p style="margin-bottom: 0.8rem;"><strong>❌</strong> "좋은 글 써줘"</p>
+                    <p><strong style="color: #3A3A3C;">✅</strong> "20대 직장인을 위한 300자 재테크 팁"</p>
+                </div>
+                <div class="card" style="border-top: 4px solid #6E6E73;">
+                    <h3 style="color: #1D1D1F;">2. 예시 없음</h3>
+                    <p style="margin-bottom: 0.8rem;"><strong>❌</strong> "적절하게 써줘"</p>
+                    <p><strong style="color: #3A3A3C;">✅</strong> "이런 느낌으로: [예시 첨부]"</p>
+                </div>
+                <div class="card" style="border-top: 4px solid #6E6E73;">
+                    <h3 style="color: #1D1D1F;">3. 제한 없음</h3>
+                    <p style="margin-bottom: 0.8rem;"><strong>❌</strong> "알아서 해줘"</p>
+                    <p><strong style="color: #3A3A3C;">✅</strong> "가격 언급 금지, 500자 이내"</p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 2rem;">
+                황금 규칙: AI가 <span style="color: #F5F5F7; font-weight: 700;">질문 없이 바로 작업</span>할 수 있을 만큼 구체적으로!
+            </div>
+        </div>
+
+        <!-- ==================== Slide 21: PRD 다듬기 ==================== -->
+        <div class="slide" id="slide-21">
+            <h2>PRD 받은 후: 다듬기</h2>
+            <p style="margin-bottom: 1.5rem;">AI가 만든 PRD를 검토하고 피드백하세요</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px;">
+                <div>
+                    <div class="step-box"><h3>1️⃣ PRD 검토하기</h3><p style="font-size: 1rem; color: var(--gray);">내가 원하는 게 맞는지 확인</p></div>
+                    <div class="step-box"><h3>2️⃣ 부족한 부분 피드백</h3><p style="font-size: 1rem; color: var(--gray);">"입력에 [이것]도 추가해줘"<br>"톤을 더 친근하게 바꿔줘"</p></div>
+                    <div class="step-box active"><h3>3️⃣ 수정된 PRD 확인</h3><p style="font-size: 1rem;">만족할 때까지 반복!</p></div>
+                </div>
+                <div class="card" style="background: #1D1D1F; color: white;">
+                    <h3 style="color: #F5F5F7; margin-bottom: 1rem;">💬 피드백 예시</h3>
+                    <div style="font-size: 0.95rem; line-height: 1.8;">
+                        <p style="color: white; margin-bottom: 0.8rem;">"출력 형식에 마크다운 표도 포함해줘"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"예시를 2개 더 추가해줘"</p>
+                        <p style="color: white; margin-bottom: 0.8rem;">"NOT 섹션에 이모지 금지도 넣어줘"</p>
+                        <p style="color: #C7C7CC;">→ 원하는 PRD가 될 때까지 대화!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 22: 꿀팁 - 반복적 PRD 개선 ==================== -->
+        <div class="slide" id="slide-22">
+            <h2>꿀팁 #2: 반복적 PRD 개선 전략</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">AI와 대화하며 PRD 발전시키기</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <div class="step-box"><h3>[1차] 초안 요청</h3><p style="font-size: 0.95rem; color: var(--gray);">"X 에이전트 PRD 초안 작성해줘"</p></div>
+                    <div class="step-box"><h3>[2차] 개선 요청</h3><p style="font-size: 0.95rem; color: var(--gray);">"빠진 부분이나 모호한 부분 지적하고 개선해줘"</p></div>
+                    <div class="step-box"><h3>[3차] 문제점 확인</h3><p style="font-size: 0.95rem; color: var(--gray);">"이 PRD로 구현할 때 예상되는 문제점은?"</p></div>
+                    <div class="step-box active"><h3>[4차] 최종 확정</h3><p style="font-size: 0.95rem;">"최종 PRD + 구현 단계별 체크리스트 만들어줘"</p></div>
+                </div>
+                <div class="card" style="background: var(--light);">
+                    <h3 style="color: #1D1D1F; margin-bottom: 1rem;">💡 포인트</h3>
+                    <p style="font-size: 1rem; color: var(--dark);">
+                        • 한 번에 완벽한 PRD는 없다<br><br>
+                        • 대화하며 점점 좋아진다<br><br>
+                        • AI가 빈틈을 찾아준다<br><br>
+                        • 3-4회 반복이면 충분
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 23: 코드 요청하고 반복하기 ==================== -->
+        <div class="slide" id="slide-23">
+            <h2>코드 요청하고 반복하기</h2>
+            <p style="margin-bottom: 1.5rem;">PRD가 완성되면 코드를 요청하세요</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1050px;">
+                <div>
+                    <div class="code-block" style="font-size: 0.9rem;">
+                        <span class="highlight">코드 요청:</span><br>
+                        "이 PRD대로 에이전트 코드 만들어줘"<br><br>
+                        <span class="highlight">테스트 요청:</span><br>
+                        "실행해서 테스트해봐"<br><br>
+                        <span class="highlight">수정 요청:</span><br>
+                        "출력 형식이 좀 달라, [이렇게] 바꿔줘"
+                    </div>
+                </div>
+                <div>
+                    <div style="background: #F5F5F7; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem;">
+                        <h3 style="color: #3A3A3C;">🔄 반복의 핵심</h3>
+                        <p style="font-size: 1rem; color: var(--dark);">
+                            <strong>테스트 → 피드백 → 수정</strong><br>
+                            원하는 결과가 나올 때까지 반복!
+                        </p>
+                    </div>
+                    <div style="background: var(--light); padding: 1.5rem; border-radius: 12px;">
+                        <h3 style="color: #1D1D1F;">💡 팁</h3>
+                        <p style="font-size: 1rem; color: var(--dark);">
+                            에러가 나면 그대로 복사해서<br>
+                            "이런 에러가 났어, 고쳐줘"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 24: 전체 흐름 정리 ==================== -->
+        <div class="slide slide-dark" id="slide-24">
+            <h2 style="color: white;">실전 워크플로우 요약</h2>
+            <div style="display: flex; flex-direction: column; gap: 0.6rem; max-width: 700px;" class="animate animate-delay-1">
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">1️⃣</span>
+                    <p style="font-size: 1rem; color: white;">아이디어 정리</p>
+                </div>
+                <div style="text-align: center; color: #C7C7CC; font-size: 1.2rem;">↓</div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">2️⃣</span>
+                    <p style="font-size: 1rem; color: white;">AI에게 PRD 초안 요청</p>
+                </div>
+                <div style="text-align: center; color: #C7C7CC; font-size: 1.2rem;">↓</div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">3️⃣</span>
+                    <p style="font-size: 1rem; color: white;">PRD 검토 및 개선 대화</p>
+                </div>
+                <div style="text-align: center; color: #C7C7CC; font-size: 1.2rem;">↓</div>
+                <div style="background: #6E6E73; padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">4️⃣</span>
+                    <p style="font-size: 1rem; color: white;"><strong>기술스택 확정</strong> (모르면 AI에게!)</p>
+                </div>
+                <div style="text-align: center; color: #C7C7CC; font-size: 1.2rem;">↓</div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">5️⃣</span>
+                    <p style="font-size: 1rem; color: white;">구현 시작 (PRD를 프롬프트로 활용)</p>
+                </div>
+                <div style="text-align: center; color: #C7C7CC; font-size: 1.2rem;">↓</div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">6️⃣</span>
+                    <p style="font-size: 1rem; color: white;">문제 발생 시 PRD 업데이트 (반복)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== ADVANCED SECTION ==================== -->
+
+        <!-- ==================== Slide 25: Advanced 시작 ==================== -->
+        <div class="slide slide-gradient" id="slide-25">
+            <div class="badge animate animate-delay-1">🎓 Advanced</div>
+            <h1 class="animate animate-delay-2">PRD 심화 과정</h1>
+            <p style="font-size: 1.5rem; opacity: 0.9; margin-top: 1rem;" class="animate animate-delay-3">
+                AI가 헤매지 않게 하는 기술
+            </p>
+            <div class="grid-2 animate animate-delay-3" style="margin-top: 2rem; max-width: 700px;">
+                <div style="background: rgba(255,255,255,0.15); padding: 1.5rem; border-radius: 16px; text-align: center;">
+                    <p style="font-size: 1rem; opacity: 0.8;">기초 (Basic)</p>
+                    <p style="font-size: 1.3rem; margin-top: 0.5rem;"><strong>뭘 만들지</strong> 전달</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.25); padding: 1.5rem; border-radius: 16px; text-align: center; border: 2px solid white;">
+                    <p style="font-size: 1rem; opacity: 0.8;">심화 (Advanced)</p>
+                    <p style="font-size: 1.3rem; margin-top: 0.5rem;"><strong>어떻게 만들지</strong>까지 전달</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 26: 에이전트 PRD 특수 고려사항 ==================== -->
+        <div class="slide" id="slide-26">
+            <h2>에이전트 프로젝트 PRD 특수 고려사항</h2>
+            <div class="highlight-box animate animate-delay-1">
+                에이전트 = <span style="color: #F5F5F7; font-weight: 700;">LLM + 도구(Tools) + 메모리 + 목표</span>
+            </div>
+            <p style="margin: 1.5rem 0; font-weight: 600;">PRD에 <strong style="color: #1D1D1F;">반드시</strong> 포함할 것:</p>
+            <div class="grid-2 animate animate-delay-2" style="max-width: 900px; gap: 2rem;">
+                <div>
+                    <div class="step-box active"><h3>🎭 에이전트의 역할/페르소나</h3><p style="font-size: 0.95rem;">어떤 성격과 말투로 행동할지</p></div>
+                    <div class="step-box active"><h3>🔧 사용할 외부 도구/API 목록</h3><p style="font-size: 0.95rem;">웹 검색, 파일 읽기, DB 접근 등</p></div>
+                </div>
+                <div>
+                    <div class="step-box active"><h3>📥📤 입출력 형식</h3><p style="font-size: 0.95rem;">JSON, 텍스트 등 명확한 형식 지정</p></div>
+                    <div class="step-box active"><h3>⚠️ 실패 처리 방법</h3><p style="font-size: 0.95rem;">에러 발생 시 어떻게 대응할지</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 27: 에이전트 PRD 실전 예시 ==================== -->
+        <div class="slide" id="slide-27">
+            <h2>에이전트 PRD 실전 예시</h2>
+            <p style="margin-bottom: 1rem;">AI 이메일 분류 에이전트</p>
+            <div class="code-block animate animate-delay-1" style="max-width: 900px; font-size: 0.85rem;">
+                <span class="highlight">## 에이전트 역할</span><br>
+                받은 이메일을 자동으로 분류하고 우선순위를 매기는 AI 비서<br><br>
+                <span class="highlight">## 핵심 기능</span><br>
+                1. 이메일 내용 분석 (발신자, 제목, 본문)<br>
+                2. 카테고리 분류: 긴급/업무/개인/스팸/뉴스레터<br>
+                3. 우선순위: 상/중/하<br>
+                4. 요약 생성 (3줄 이내)<br><br>
+                <span class="highlight">## 입출력 명세</span><br>
+                - Input: 이메일 JSON {from, subject, body, date}<br>
+                - Output: {category, priority, summary, suggested_action}<br><br>
+                <span class="highlight">## 실패 처리</span><br>
+                - 분류 확신도 &lt; 70%: "미분류"로 처리<br>
+                - API 에러: 3회 재시도 후 로깅
+            </div>
+        </div>
+
+        <!-- ==================== Slide 28: 단계별 구현 순서 ==================== -->
+        <div class="slide" id="slide-28">
+            <h2>🔢 단계별 구현 순서 명시하기</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">AI는 한 번에 다 만들면 헤맨다</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <h3 style="color: #6E6E73; margin-bottom: 1rem;">❌ 나쁜 예</h3>
+                    <div class="code-block" style="font-size: 0.95rem;">
+                        "사용자 인증 시스템 만들어줘"
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--gray); margin-top: 0.5rem;">→ AI가 어디서부터 시작할지 모름</p>
+                </div>
+                <div>
+                    <h3 style="color: #3A3A3C; margin-bottom: 1rem;">✅ 좋은 예</h3>
+                    <div class="code-block" style="font-size: 0.9rem; text-align: left;">
+                        <strong>Phase 1:</strong> DB 스키마 (users 테이블)<br>
+                        <strong>Phase 2:</strong> API (/login, /register)<br>
+                        <strong>Phase 3:</strong> 인증 로직 (JWT 토큰)<br>
+                        <strong>Phase 4:</strong> UI (로그인 폼)
+                    </div>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                💡 핵심: <span style="color: #F5F5F7; font-weight: 700;">의존성 순서대로</span> → 기초부터 쌓기
+            </div>
+        </div>
+
+        <!-- ==================== Slide 29: 테스트 가능한 완료 조건 ==================== -->
+        <div class="slide" id="slide-29">
+            <h2>✅ 테스트 가능한 완료 조건</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">"되면 됐지" 대신 명확한 기준 (Acceptance Criteria)</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <h3 style="color: #6E6E73; margin-bottom: 1rem;">❌ 모호한 기준</h3>
+                    <div class="step-box"><p style="font-size: 1rem;">"빠르게 동작해야 함"</p></div>
+                    <div class="step-box"><p style="font-size: 1rem;">"에러 처리 잘 해야 함"</p></div>
+                </div>
+                <div>
+                    <h3 style="color: #3A3A3C; margin-bottom: 1rem;">✅ 테스트 가능한 기준</h3>
+                    <div class="step-box active"><p style="font-size: 1rem;">"페이지 로딩 <strong>2초 이내</strong>"</p></div>
+                    <div class="step-box active"><p style="font-size: 1rem;">"잘못된 이메일 → '<strong>올바른 이메일을 입력하세요</strong>' 표시"</p></div>
+                </div>
+            </div>
+            <div class="code-block animate animate-delay-2" style="margin-top: 1.5rem; max-width: 700px; font-size: 0.95rem; text-align: left;">
+                <strong style="color: #FFFFFF;">Given-When-Then 형식:</strong><br><br>
+                <strong>Given:</strong> 사용자가 로그인 페이지에 있을 때<br>
+                <strong>When:</strong> 잘못된 비밀번호 입력<br>
+                <strong>Then:</strong> "비밀번호가 틀렸습니다" 메시지 표시
+            </div>
+        </div>
+
+        <!-- ==================== Slide 30: 엣지 케이스 ==================== -->
+        <div class="slide" id="slide-30">
+            <h2>⚠️ 엣지 케이스 미리 정의하기</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">AI에게 물어보기: "뭐가 잘못될 수 있을까?"</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <div class="code-block" style="font-size: 1rem; text-align: left;">
+                        "이 기능에서 뭐가 잘못될 수 있을까?<br>
+                        엣지 케이스 5개 알려줘"
+                    </div>
+                </div>
+                <div>
+                    <div class="step-box"><p style="font-size: 0.95rem;">🌐 인터넷 끊겼을 때</p></div>
+                    <div class="step-box"><p style="font-size: 0.95rem;">📭 빈 값 입력했을 때</p></div>
+                    <div class="step-box"><p style="font-size: 0.95rem;">👆 동시에 여러 번 클릭했을 때</p></div>
+                    <div class="step-box"><p style="font-size: 0.95rem;">📝 아주 긴 텍스트 입력했을 때</p></div>
+                    <div class="step-box"><p style="font-size: 0.95rem;">🔒 권한 없는 사용자가 접근할 때</p></div>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                💡 미리 정의하면 → AI가 <span style="color: #F5F5F7; font-weight: 700;">알아서 처리 코드</span>를 만들어준다!
+            </div>
+        </div>
+
+        <!-- ==================== Slide 31: AI에게 역할 부여 ==================== -->
+        <div class="slide" id="slide-31">
+            <h2>🎭 AI에게 역할 부여하기</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">더 전문적인 답변을 원한다면</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <h3 style="color: var(--gray); margin-bottom: 1rem;">기본 요청</h3>
+                    <div class="code-block" style="font-size: 1rem;">
+                        "로그인 기능 만들어줘"
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: #3A3A3C; margin-bottom: 1rem;">역할 부여 요청</h3>
+                    <div class="code-block" style="font-size: 0.9rem; text-align: left;">
+                        "<span class="highlight">너는 보안을 중요시하는 시니어 백엔드 개발자야.</span><br><br>
+                        SQL 인젝션, XSS 공격을 방지하는<br>
+                        안전한 로그인 기능을 만들어줘."
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 1.5rem;" class="animate animate-delay-2">
+                <div style="background: var(--light); padding: 0.8rem 1.2rem; border-radius: 20px; font-size: 0.9rem;">🛡️ "보안 전문가"</div>
+                <div style="background: var(--light); padding: 0.8rem 1.2rem; border-radius: 20px; font-size: 0.9rem;">♿ "접근성 전문가"</div>
+                <div style="background: var(--light); padding: 0.8rem 1.2rem; border-radius: 20px; font-size: 0.9rem;">⚡ "성능 최적화 전문가"</div>
+                <div style="background: var(--light); padding: 0.8rem 1.2rem; border-radius: 20px; font-size: 0.9rem;">👶 "초보자용 선생님"</div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 32: 작은 단위로 쪼개기 ==================== -->
+        <div class="slide" id="slide-32">
+            <h2>✂️ 작은 단위로 쪼개기</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">AI에게 단계를 쪼개달라고 요청하세요!</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <h3 style="color: #6E6E73; margin-bottom: 1rem;">❌ 너무 큰 단위</h3>
+                    <div class="code-block" style="font-size: 1.1rem;">
+                        "쇼핑몰 만들어줘"
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--gray); margin-top: 0.5rem;">→ AI가 중간에 길을 잃음</p>
+                </div>
+                <div>
+                    <h3 style="color: #3A3A3C; margin-bottom: 1rem;">✅ AI에게 쪼개달라고 요청</h3>
+                    <div class="code-block" style="font-size: 0.95rem; margin-bottom: 0.8rem;">
+                        "쇼핑몰을 만들건데,<br>
+                        <span class="highlight">단계를 쪼개서 알려줘</span>"
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--gray);">→ AI가 단계별로 정리해줌</p>
+                </div>
+            </div>
+            <div style="max-width: 600px; margin-top: 1.5rem;" class="animate animate-delay-2">
+                <p style="font-size: 0.9rem; color: #1D1D1F; margin-bottom: 0.5rem; font-weight: 600;">🤖 AI의 응답 예시:</p>
+                <div class="step-box"><p style="font-size: 0.9rem;">1. 상품 목록 페이지</p></div>
+                <div class="step-box"><p style="font-size: 0.9rem;">2. 상품 상세 페이지</p></div>
+                <div class="step-box"><p style="font-size: 0.9rem;">3. 장바구니 기능</p></div>
+                <div class="step-box active"><p style="font-size: 0.9rem;">→ 각 단계별로 하나씩 개발 진행!</p></div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 33: PRD 파일 구조화 ==================== -->
+        <div class="slide" id="slide-33">
+            <h2>📁 PRD 파일로 관리하기</h2>
+            <p style="margin-bottom: 1rem; color: var(--gray);">프로젝트 폴더에 문서로 저장</p>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px; gap: 2rem;">
+                <div>
+                    <div class="code-block" style="font-size: 1rem; text-align: left;">
+                        📁 my-project/<br>
+                        ├── 📁 <span class="highlight">docs/</span><br>
+                        │   ├── <strong>PRD.md</strong> ← 요구사항<br>
+                        │   ├── tech-stack.md<br>
+                        │   └── decisions.md<br>
+                        ├── 📁 src/<br>
+                        └── README.md
+                    </div>
+                </div>
+                <div>
+                    <h3 style="color: #1D1D1F; margin-bottom: 1rem;">장점</h3>
+                    <div class="step-box"><p style="font-size: 1rem;">📎 AI가 파일 참조 가능<br><span style="color: var(--gray); font-size: 0.9rem;">"@PRD.md 보고 만들어줘"</span></p></div>
+                    <div class="step-box"><p style="font-size: 1rem;">📜 히스토리 추적 가능</p></div>
+                    <div class="step-box"><p style="font-size: 1rem;">👥 팀원과 공유 쉬움</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 34: 흔한 실수와 해결책 테이블 ==================== -->
+        <div class="slide" id="slide-34">
+            <h2>흔한 실수와 해결책</h2>
+            <div class="table-container animate animate-delay-1">
+                <table style="font-size: 0.9rem;">
+                    <thead>
+                        <tr>
+                            <th>실수</th>
+                            <th>문제점</th>
+                            <th>해결책</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>기능 과다</td>
+                            <td>AI가 혼란, 품질 저하</td>
+                            <td><span style="color: #3A3A3C; font-weight: 600;">MVP 3-5개 기능만</span></td>
+                        </tr>
+                        <tr>
+                            <td>기술스택 미정</td>
+                            <td>AI가 매번 다른 스택 사용</td>
+                            <td><span style="color: #3A3A3C; font-weight: 600;">첫 PRD에 확정</span></td>
+                        </tr>
+                        <tr>
+                            <td>에러 처리 누락</td>
+                            <td>실패 시 앱 크래시</td>
+                            <td><span style="color: #3A3A3C; font-weight: 600;">실패 케이스 명시</span></td>
+                        </tr>
+                        <tr>
+                            <td>레퍼런스 없음</td>
+                            <td>AI 해석 자유도 과다</td>
+                            <td><span style="color: #3A3A3C; font-weight: 600;">스크린샷/링크 첨부</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 35: Advanced 체크리스트 ==================== -->
+        <div class="slide slide-dark" id="slide-35">
+            <h2 style="color: white;">✔️ Advanced 체크리스트</h2>
+            <p style="margin-bottom: 1.5rem; color: rgba(255,255,255,0.7);">PRD 제출 전 확인하기</p>
+            <div style="max-width: 600px; text-align: left;" class="animate animate-delay-1">
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🔢</span>
+                    <p style="font-size: 1.1rem;">구현 순서(Phase)가 명확한가?</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">✅</span>
+                    <p style="font-size: 1.1rem;">완료 조건이 테스트 가능한가?</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">⚠️</span>
+                    <p style="font-size: 1.1rem;">엣지 케이스를 고려했는가?</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">✂️</span>
+                    <p style="font-size: 1.1rem;">작업 단위가 충분히 작은가?</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🎭</span>
+                    <p style="font-size: 1.1rem;">AI 역할을 지정했는가?</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1rem 1.5rem; border-radius: 12px; display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">📥📤</span>
+                    <p style="font-size: 1.1rem;">입출력 형식이 명확한가?</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 36: 꿀팁 1 - 태스크 매니저 & Git ==================== -->
+        <div class="slide" id="slide-36">
+            <div class="badge" style="background: #1D1D1F; color: #FFFFFF;">🍯 꿀팁 시리즈</div>
+            <h2>꿀팁 ① 태스크 매니저 &amp; Git 활용</h2>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 1000px;">
+                <div class="card">
+                    <div class="card-icon">📋</div>
+                    <h3>Task Manager 활용</h3>
+                    <p style="font-size: 0.95rem; line-height: 1.6;">
+                        • PRD → <strong>tasks.json</strong> 자동 생성<br>
+                        • Claude Task Master 등 활용<br>
+                        • 작업 단위별 진행 상황 추적<br>
+                        • "PRD 분석해서 태스크 만들어줘"
+                    </p>
+                </div>
+                <div class="card card-primary">
+                    <div class="card-icon">🔄</div>
+                    <h3>Git 버전 관리 필수!</h3>
+                    <p style="font-size: 0.95rem; line-height: 1.6;">
+                        • <strong>10~15분마다 커밋</strong> 습관화<br>
+                        • 기능 단위로 작은 커밋 유지<br>
+                        • 문제 발생 시 빠른 롤백 가능<br>
+                        • "매 작업 완료 후 커밋해줘"
+                    </p>
+                </div>
+            </div>
+            <div class="highlight-box animate animate-delay-2" style="margin-top: 1.5rem;">
+                💡 PRD에 명시: "각 기능 완료 시 Git 커밋하고, tasks.json 업데이트할 것"
+            </div>
+        </div>
+
+        <!-- ==================== Slide 37: 꿀팁 2 - 개발 환경 설정 ==================== -->
+        <div class="slide slide-dark" id="slide-37">
+            <div class="badge">🍯 꿀팁 시리즈</div>
+            <h2 style="color: white;">꿀팁 ② 개발 환경 &amp; 도구 설정</h2>
+            <div class="grid-2 animate animate-delay-1" style="max-width: 700px;">
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
+                    <span style="font-size: 2rem;">🐍</span>
+                    <h3 style="color: white; margin: 0.8rem 0 0.5rem;">Python 추천</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                        AI가 가장 잘 아는 언어<br>
+                        에이전트 라이브러리 풍부<br>
+                        PRD에 "Python으로 개발"
+                    </p>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 12px;">
+                    <span style="font-size: 2rem;">⚡</span>
+                    <h3 style="color: white; margin: 0.8rem 0 0.5rem;">Gemini CLI</h3>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 0.9rem;">
+                        터미널에서 직접 사용<br>
+                        <strong>1M 토큰</strong> 컨텍스트<br>
+                        무료 티어로 시작 가능
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 38: 꿀팁 3 - PRD 고급 팁 ==================== -->
+        <div class="slide" id="slide-38">
+            <div class="badge" style="background: #1D1D1F; color: #FFFFFF;">🍯 꿀팁 시리즈</div>
+            <h2>꿀팁 ③ PRD 작성 고급 팁</h2>
+            <div style="max-width: 900px;" class="animate animate-delay-1">
+                <div class="step-box" style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">📄</span>
+                    <div>
+                        <h3 style="margin-bottom: 0.3rem;">product.md 파일 유지</h3>
+                        <p style="font-size: 0.95rem;">프로젝트 루트에 제품 정보 문서화 → AI가 항상 참조</p>
+                    </div>
+                </div>
+                <div class="step-box" style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🍰</span>
+                    <div>
+                        <h3 style="margin-bottom: 0.3rem;">Vertical Slice 개발</h3>
+                        <p style="font-size: 0.95rem;">전체 레이어를 한 번에 → 입력부터 출력까지 동작하는 최소 단위</p>
+                    </div>
+                </div>
+                <div class="step-box" style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🎯</span>
+                    <div>
+                        <h3 style="margin-bottom: 0.3rem;">데이터 먼저 설계</h3>
+                        <p style="font-size: 0.95rem;">PRD에 데이터 모델/스키마 먼저 정의 → UI보다 데이터 흐름 우선</p>
+                    </div>
+                </div>
+                <div class="step-box" style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">🔁</span>
+                    <div>
+                        <h3 style="margin-bottom: 0.3rem;">작게 시작, 자주 테스트</h3>
+                        <p style="font-size: 0.95rem;">한 번에 큰 기능 X → 작은 단위로 나눠서 매번 동작 확인</p>
+                    </div>
+                </div>
+                <div class="step-box active" style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-size: 1.5rem;">💬</span>
+                    <div>
+                        <h3 style="margin-bottom: 0.3rem; color: white;">맥락 유지가 핵심!</h3>
+                        <p style="font-size: 0.95rem; color: rgba(255,255,255,0.9);">긴 대화보다 → PRD 파일에 정리 후 참조시키기</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== Slide 39: 마무리 ==================== -->
+        <div class="slide slide-gradient" id="slide-39">
+            <div class="badge animate animate-delay-1">핵심 정리</div>
+            <h1 class="animate animate-delay-2">좋은 PRD = 좋은 에이전트</h1>
+            <div class="grid-2 animate animate-delay-3" style="margin-top: 1.5rem; max-width: 800px; gap: 1.5rem;">
+                <div style="text-align: left;">
+                    <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 0.5rem;">📘 Basic</p>
+                    <div style="background: rgba(255,255,255,0.15); padding: 1rem; border-radius: 12px; font-size: 0.95rem;">
+                        ✓ 한 문장 설명<br>
+                        ✓ 입력 → 출력<br>
+                        ✓ 예시 포함<br>
+                        ✓ 기술스택 (모르면 AI에게!)
+                    </div>
+                </div>
+                <div style="text-align: left;">
+                    <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 0.5rem;">🎓 Advanced</p>
+                    <div style="background: rgba(255,255,255,0.25); padding: 1rem; border-radius: 12px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.3);">
+                        ✓ 단계별 순서<br>
+                        ✓ 테스트 가능한 조건<br>
+                        ✓ 엣지 케이스 정의<br>
+                        ✓ AI 역할 부여
+                    </div>
+                </div>
+            </div>
+            <p style="margin-top: 2rem; font-size: 1.3rem; opacity: 0.9;" class="animate animate-delay-3">
+                이제 여러분도 바이브코더! 🎉
+            </p>
+            <p style="margin-top: 1.5rem; font-size: 1rem; opacity: 0.7;">AX Agent Workshop | 모두의연구소 KHP팀</p>
+        </div>
+    </div>
+
+    <nav class="controls">
+        <button class="prev" onclick="prevSlide()" aria-label="이전 슬라이드">◀</button>
+        <div class="progress-container"><div class="progress-bar" id="progress"></div></div>
+        <span class="slide-counter" id="counter">1 / 39</span>
+        <button class="next" onclick="nextSlide()" aria-label="다음 슬라이드">▶</button>
+    </nav>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 39;
+
+        function showSlide(n) {
+            if (n < 1) n = 1;
+            if (n > totalSlides) n = totalSlides;
+            currentSlide = n;
+            document.querySelectorAll('.slide').forEach(slide => slide.classList.remove('active'));
+            const slide = document.getElementById(`slide-${n}`);
+            if (slide) slide.classList.add('active');
+            document.getElementById('progress').style.width = `${((n - 1) / (totalSlides - 1)) * 100}%`;
+            document.getElementById('counter').textContent = `${n} / ${totalSlides}`;
+            document.querySelector('.prev').disabled = n === 1;
+            document.querySelector('.next').disabled = n === totalSlides;
+            history.replaceState(null, null, `#slide-${n}`);
+            updateGnb(n);
+        }
+
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+
+        // GNB Navigation Functions
+        function updateGnb(slideNum) {
+            const gnbItems = document.querySelectorAll('.gnb-item');
+            gnbItems.forEach(item => {
+                const start = parseInt(item.dataset.start);
+                const end = parseInt(item.dataset.end);
+                if (slideNum >= start && slideNum <= end) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            // Update progress bar
+            const progressPercent = ((slideNum - 1) / (totalSlides - 1)) * 100;
+            document.getElementById('gnb-progress').style.width = `${progressPercent}%`;
+        }
+
+        function goToSection(slideNum) {
+            showSlide(slideNum);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowRight': case ' ': case 'PageDown': e.preventDefault(); nextSlide(); break;
+                case 'ArrowLeft': case 'PageUp': e.preventDefault(); prevSlide(); break;
+                case 'Home': e.preventDefault(); showSlide(1); break;
+                case 'End': e.preventDefault(); showSlide(totalSlides); break;
+            }
+        });
+
+        let touchStartX = 0, touchEndX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.changedTouches[0].screenX; });
+        document.addEventListener('touchend', (e) => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); });
+        function handleSwipe() {
+            const diff = touchStartX - touchEndX;
+            if (Math.abs(diff) > 50) { if (diff > 0) nextSlide(); else prevSlide(); }
+        }
+
+        function init() {
+            const hash = window.location.hash;
+            if (hash) {
+                const slideNum = parseInt(hash.replace('#slide-', ''));
+                if (!isNaN(slideNum) && slideNum >= 1 && slideNum <= totalSlides) { showSlide(slideNum); return; }
+            }
+            showSlide(1);
+        }
+
+        window.addEventListener('hashchange', () => {
+            const slideNum = parseInt(window.location.hash.replace('#slide-', ''));
+            if (!isNaN(slideNum) && slideNum !== currentSlide) showSlide(slideNum);
+        });
+
+        init();
+    </script>
+</body>
+</html>
